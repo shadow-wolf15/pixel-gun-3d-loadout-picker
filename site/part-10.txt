@@ -6,5 +6,55 @@
  btn.textContent="Added to missing-gun list";btn.disabled=true;
 });
 </script>
+<script id="typedWeaponInventory">
+(function(){
+ const KEY="typedOwnedGuns", MODEKEY="typedInventoryMode";
+ const get=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"[]").filter(x=>typeof x==="string")}catch(e){return[]}};
+ const save=a=>localStorage.setItem(KEY,JSON.stringify([...new Set(a)]));
+ const mode=()=>localStorage.getItem(MODEKEY)!=="off";
+ function allWeapons(){return Object.entries(db||{}).flatMap(([category,names])=>names.map(name=>({name,category})));}
+ function escape(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+ function refresh(){
+   const inv=document.getElementById("inventory"); if(!inv)return;
+   const old=document.getElementById("typedWeaponBox"); if(old)old.remove();
+   const box=document.createElement("div"); box.id="typedWeaponBox"; box.className="custom";
+   box.style.cssText="margin:12px 0;padding:14px;border:1px solid #303a52;border-radius:12px;background:#0b111d";
+   box.innerHTML='<div style="font-weight:700;margin-bottom:10px">YOUR WEAPON INVENTORY</div>'+
+     '<label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer"><input id="typedInventoryToggle" type="checkbox" '+(mode()?"checked":"")+'><span><strong>Use only the guns I type</strong><br><small style="opacity:.7">ON = only your typed guns • OFF = full database</small></span></label>'+
+     '<div style="display:flex;gap:8px"><input id="weaponSearch" type="search" placeholder="Type a gun you own..." autocomplete="off" style="flex:1"><button type="button" id="addWeapon" class="primary" style="width:auto;margin:0;padding:10px 14px">Add</button></div>'+
+     '<div id="weaponSuggestions" style="position:relative"></div><div id="ownedWeapons" style="margin-top:10px"></div>'+
+     '<div style="font-size:11px;opacity:.7;margin-top:8px">Event / seasonal weapons can also be selected in the inventory list below. Only checked event weapons count as owned.</div>';
+   inv.parentNode.insertBefore(box,inv);
+   const toggle=box.querySelector("#typedInventoryToggle"),input=box.querySelector("#weaponSearch"),suggest=box.querySelector("#weaponSuggestions"),list=box.querySelector("#ownedWeapons");
+   function draw(){
+     const owned=get();
+     list.innerHTML=owned.length?owned.map(n=>'<span style="display:inline-flex;align-items:center;gap:5px;margin:3px;padding:5px 8px;border:1px solid #252e43;border-radius:999px;background:#111827;font-size:11px">'+escape(n)+' <button type="button" data-remove="'+escape(n)+'" style="border:0;background:none;color:#ff8d8d;cursor:pointer;padding:0">×</button></span>').join(""):'<div class="sub" style="margin:6px 0">No guns typed yet. Add the guns you actually own.</div>';
+   }
+   function suggestions(){
+     const q=input.value.trim().toLowerCase(); suggest.innerHTML=""; if(!q)return;
+     const matches=allWeapons().filter(x=>x.name.toLowerCase().includes(q)&&!get().includes(x.name)).slice(0,8);
+     if(!matches.length)return;
+     const s=document.createElement("div"); s.style.cssText="position:absolute;z-index:30;left:0;right:70px;background:#0b111d;border:1px solid #303a52;border-radius:10px;overflow:hidden";
+     matches.forEach(x=>{const b=document.createElement("button");b.type="button";b.textContent=x.name+" — "+x.category;b.style.cssText="display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #20283a;background:#0b111d;color:#fff;padding:9px;cursor:pointer";b.onclick=()=>{addName(x.name);input.value="";suggest.innerHTML=""};s.appendChild(b)});
+     suggest.appendChild(s);
+   }
+   function addName(value){
+     const found=allWeapons().find(x=>x.name.toLowerCase()===String(value).trim().toLowerCase()); if(!found)return;
+     const a=get(); if(!a.includes(found.name)){a.push(found.name);save(a);draw(); if(typeof window.renderInventory==="function")window.renderInventory();}
+   }
+   toggle.onchange=()=>{localStorage.setItem(MODEKEY,toggle.checked?"on":"off");if(typeof window.renderInventory==="function")window.renderInventory();};
+   input.oninput=suggestions;
+   input.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();addName(input.value);input.value="";suggest.innerHTML="";}};
+   box.querySelector("#addWeapon").onclick=()=>{addName(input.value);input.value="";suggest.innerHTML="";};
+   list.onclick=e=>{const b=e.target.closest("[data-remove]");if(!b)return;save(get().filter(x=>x!==b.getAttribute("data-remove")));draw();if(typeof window.renderInventory==="function")window.renderInventory();};
+   draw();
+ }
+ const original=window.renderInventory;
+ if(typeof original==="function"){
+   window.renderInventory=function(){original();refresh();};
+ }
+ setTimeout(refresh,0);
+})();
+</script>
 </body>
 </html>
