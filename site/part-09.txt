@@ -32,13 +32,14 @@ window.rateBuild=function(value){
 };
 document.getElementById("build")?.addEventListener("click",function(event){
  event.preventDefault();
- try{build();}
+ event.stopImmediatePropagation();
+ try{window.safeBuildLoadout();}
  catch(err){
-   console.error("Build my loadout failed:",err);
+   console.error("Safe loadout builder failed:",err);
    const out=document.getElementById("output");
-   if(out) out.innerHTML='<div class="error"><strong>Loadout builder recovered from an error.</strong><p>Try Build again; the picker will use its safe fallback if a weapon record is malformed.</p></div>';
+   if(out) out.innerHTML='<div class="error"><strong>Loadout builder hit an unexpected error.</strong><p>Refresh the page and try again. The weapon database remains available.</p></div>';
    const status=document.getElementById("status");
-   if(status) status.textContent="RECOVERED";
+   if(status) status.textContent="ERROR";
  }
 });
 document.getElementById("includeEvents")?.addEventListener("change",()=>{if(document.getElementById("output")?.classList.contains("built"))build();});
