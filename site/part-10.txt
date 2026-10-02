@@ -179,10 +179,11 @@
       const text=JSON.stringify(raw).toLowerCase();
       const num=(...keys)=>{for(const k of keys){const v=Number(raw?.[k]);if(Number.isFinite(v))return v}return null};
       return {
-        efficiency:num("efficiency","power","damage")??null,
+        efficiency:num("efficiency","power")??null,
         fireRate:num("fireRate","fire_rate","fire rate")??null,
         capacity:num("capacity","ammo","magazine")??null,
         mobility:num("mobility")??null,
+        damage:num("damage","baseDamage")??null,
         attack:num("attack")??null,
         rarity:String(raw?.rarity||"").toLowerCase(),
         attrs:text
@@ -251,7 +252,7 @@
     const load={},chosen=new Set(),chosenTags=new Set();
     cats.forEach(function(cat,index){
       const pool=[...new Set(Array.isArray(db?.[cat])?db[cat]:[])].filter(function(n){
-        return n&&available.has(n)&&!missing.has(n)&&(!((typeof eventWeapons!=="undefined")&&eventWeapons instanceof Set&&eventWeapons.has(n))||includeEvents);
+        return n&&available.has(n)&&!missing.has(n)&&(!((typeof eventWeapons!=="undefined")&&eventWeapons instanceof Set&&eventWeapons.has(n))||includeEvents)&&((typeof weaponUnlockData==="undefined")||!Number.isInteger(weaponUnlockData?.[n]?.unlockLevel)||Number(weaponUnlockData[n].unlockLevel)<=level);
       });
       if(!pool.length){load[cat]=typedOnly?"No owned "+cat+" gun":"No "+cat+" weapon found";return}
       const scored=pool.map(function(name){
@@ -260,7 +261,8 @@
         let score=0;
         score+=(feedback[name]||0)*4;
         // Evaluate actual weapon stats when the database exposes them.
-        if(f.efficiency!==null)score+=Math.min(12,Math.max(0,(f.efficiency-250)*0.16))*tactic.damage;
+        if(f.efficiency!==null)score+=Math.min(12,Math.max(0,f.efficiency*0.06))*tactic.damage;
+        if(f.damage!==null)score+=Math.min(10,Math.max(0,f.damage*0.12))*tactic.damage;
         if(f.fireRate!==null)score+=Math.min(8,Math.max(0,f.fireRate/12))*tactic.sustain;
         if(f.capacity!==null)score+=Math.min(5,Math.max(0,f.capacity/10))*tactic.sustain;
         if(f.mobility!==null)score+=Math.max(0,(f.mobility-70)*0.12)*tactic.speed;
