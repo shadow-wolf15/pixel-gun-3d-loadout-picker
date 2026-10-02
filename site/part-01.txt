@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Pixel Loadout Loadout Builder — build a Pixel Gun 3D loadout from your level, playstyle and inventory.">
+<title>Pixel Loadout Loadout Builder</title>
+<style>
+:root{--bg:#070a12;--panel:#101522;--panel2:#151c2c;--line:#252e43;--text:#f4f7ff;--muted:#8e9ab3;--cyan:#61e7ff;--purple:#9b7cff;--green:#62e6a2;--shadow:0 18px 55px #0008}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(900px 500px at 20% -10%,#18365a 0,transparent 65%),radial-gradient(800px 500px at 100% 20%,#2a174b 0,transparent 60%),var(--bg);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+button,input,select{font:inherit}.app{max-width:1180px;margin:auto;padding:26px 18px 55px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:34px}.brand{font-weight:900;letter-spacing:.08em;font-size:13px}.brand span{color:var(--cyan)}.pill{border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:7px 11px;font-size:12px}
+.hero{text-align:center;margin:10px auto 38px;max-width:760px}.hero .eyebrow{color:var(--cyan);font-weight:800;font-size:12px;letter-spacing:.15em}.hero h1{font-size:clamp(40px,7vw,72px);line-height:.98;margin:12px 0 15px;letter-spacing:-.045em}.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--cyan),#fff,var(--purple));-webkit-background-clip:text;background-clip:text;color:transparent}.hero p{color:var(--muted);font-size:17px;margin:0 auto;max-width:650px}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}.panel{background:linear-gradient(180deg,#121927ee,#0d131fee);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}.controls{padding:20px;position:sticky;top:18px}.controls h2,.results h2{font-size:16px;margin:0}.sub{color:var(--muted);font-size:12px;margin:4px 0 18px}label.title{display:block;color:#c9d3e8;font-size:12px;font-weight:700;margin:15px 0 7px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}input,select{width:100%;background:#090e19;border:1px solid var(--line);color:var(--text);border-radius:11px;padding:11px 12px;outline:0}input:focus,select:focus{border-color:var(--cyan)}
+.inventory{max-height:265px;overflow:auto;padding:2px}.check{display:flex;align-items:center;gap:9px;padding:8px 7px;border-radius:9px;color:#bdc8dd;font-size:12px;cursor:pointer}.check:hover{background:#151d2e}.check input{width:auto;accent-color:var(--cyan)}.custom{margin-top:8px}
+.primary{border:0;background:linear-gradient(100deg,var(--cyan),#b4f6ff);color:#061018;font-weight:900;padding:13px;border-radius:12px;width:100%;cursor:pointer;margin-top:15px;box-shadow:0 8px 25px #61e7ff22}.primary:active{transform:translateY(1px)}
+.results{padding:20px}.resultbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.status{font-size:11px;color:var(--green);border:1px solid #275b45;background:#10251c;padding:6px 9px;border-radius:999px}
+.empty{text-align:center;padding:90px 25px;color:var(--muted);border:1px dashed var(--line);border-radius:15px}.empty strong{display:block;color:#dce5f8;margin-bottom:5px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.slot{padding:14px;border:1px solid var(--line);background:linear-gradient(145deg,#151e31,#0e1422);border-radius:15px}.slot .kind{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}.slot h3{font-size:16px;margin:7px 0 3px}.slot p{font-size:12px;color:var(--muted);margin:0}.slot.pet{border-color:#3c315d;background:linear-gradient(145deg,#1b1830,#111321)}.slot.grenade{border-color:#274b4d}
+.Loadout Builder{margin-top:10px;border:1px solid #343050;background:#151329;border-radius:15px;padding:15px}.Loadout Builder strong{color:#d8ccff}.Loadout Builder p{margin:6px 0 0;color:#b9b4ce;font-size:13px}.legend{margin-top:12px;color:#687590;font-size:11px;text-align:center}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.controls{position:static}.grid{grid-template-columns:1fr}}@media(max-width:480px){.row{grid-template-columns:1fr}.app{padding-inline:12px}}
+.feedback{display:flex;align-items:center;gap:8px;margin-top:14px}.feedback button{padding:6px 10px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);cursor:pointer}.missing-btn,.missing-help button{margin-top:8px;padding:7px 10px;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#171b24;color:#fff;cursor:pointer;font-size:12px}.missing-btn:hover,.missing-help button:hover{background:#252b38}.missing-note{display:block;margin-top:8px;font-size:11px;color:#f7b955}.missing-help{margin:12px 0;padding:10px 12px;border:1px solid rgba(255,255,255,.1);border-radius:9px;font-size:12px}.missing-help button{margin-left:8px}.slot.missing{opacity:.65}
+
+.missing-gun-list{margin:14px 0;padding:14px;border:1px solid rgba(255,255,255,.14);border-radius:12px}
+.missing-gun-list ul{list-style:none;padding:0;margin:8px 0 0}
+.missing-gun-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-top:1px solid rgba(255,255,255,.08)}
+.missing-gun-list button{border:1px solid rgba(255,255,255,.18);background:#171b24;color:#fff;padding:8px 11px;border-radius:8px;cursor:pointer;font-size:12px}
+.missing-gun-list .empty-missing{font-size:13px;opacity:.7}.level-locked{opacity:.45}.level-locked input{cursor:not-allowed}
+
+.missing-gun-list{margin:14px 0;padding:14px;border:1px solid rgba(255,255,255,.14);border-radius:12px}
+.missing-gun-list h3{margin:0 0 8px}
+.missing-gun-list ul{list-style:none;padding:0;margin:8px 0 0}
+.missing-gun-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-top:1px solid rgba(255,255,255,.08)}
+.missing-gun-list button,.missing-btn{border:1px solid rgba(255,255,255,.18);background:#171b24;color:#fff;padding:8px 11px;border-radius:8px;cursor:pointer;font-size:12px}
+.missing-count{font-size:11px;padding:3px 7px;border-radius:20px;background:#303747}
+.missing-gun-list .empty-missing{font-size:13px;opacity:.7}.level-locked{opacity:.45}.level-locked input{cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top"><div class="brand">PIXEL <span>LOADOUT</span></div><div class="pill">Fan-made tool</div></header>
+<section class="hero"><div class="eyebrow">SMART LOADOUT BUILDER</div><h1>Your loadout.<br><em>Built smarter.</em></h1><p>Set your level, playstyle and inventory. Get a complete weapon, pet and grenade setup with a clear explanation.</p></section>
+
+<div class="layout">
+<aside class="panel controls">
+<h2>Build your profile</h2><div class="sub">The more inventory you select, the more personalized the result.</div>
+<div class="row"><div><label class="title">Level</label><input id="level" type="number" min="1" max="65" value="20"></div><div><label class="title">Mode</label><select id="mode"><option>Team Fight</option><option>Deathmatch</option><option>Battle Royale</option><option>Point Capture</option><option>Any mode</option></select></div></div>
+<div class="legend" id="levelStatus" role="status" style="margin:10px 0">Level check: weapon unlock records are being verified. Unknown/event weapons won’t be treated as owned.</div>
+<label class="check" style="margin:8px 0"><input id="includeEvents" type
