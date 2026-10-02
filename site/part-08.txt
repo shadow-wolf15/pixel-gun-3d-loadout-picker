@@ -66,7 +66,7 @@ function slot(kind,name,text,extra=""){
  return `<article class="slot ${extra}"><div class="kind">${kind}</div><h3>${name}</h3><p>${text}</p>${action}</article>`;
 }
 function build(){
- const level=Math.max(1,Math.min(65,Number(document.getElementById("level").value)||1)),style=document.getElementById("style").value,mode=document.getElementById("mode").value,own=owned(),pref=preferences[style];
+ const level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1)),style=document.getElementById("style")?.value||"balanced",mode=document.getElementById("mode")?.value||"Any mode",own=owned(),pref=preferences[style]||{};
  const uniqueMeta=Object.fromEntries(Object.keys(weaponUnlockData).map(k=>[k,weaponUnlockData[k]]));
  const knownLocked=Object.values(uniqueMeta).filter(x=>Number.isInteger(x.unlockLevel)&&x.unlockLevel>level).length;
  const knownLevels=Object.values(uniqueMeta).filter(x=>Number.isInteger(x.unlockLevel)).length;
@@ -74,7 +74,17 @@ function build(){
  const levelStatus=document.getElementById("levelStatus");
  if(levelStatus) levelStatus.textContent=`Level ${level}: ${knownLevels} verified unlock records. ${knownLocked} known weapon(s) are above your level. ${unknownCount} weapon(s) have no verified level and are INCLUDED in the loadout picker. Unknown-level weapons are not blocked by your level; event/special weapons still require ownership.`;
  renderInventory();
- const load={}; const chosen=[]; Object.keys(db).forEach(c=>{ load[c]=pick(c,own,pref,chosen); if(!load[c].startsWith("No owned ")) chosen.push(load[c]); });
+ const load={}; const chosen=[];
+ Object.keys(db).forEach(c=>{
+   try{ load[c]=pick(c,own,pref,chosen); }
+   catch(err){
+     console.error("Loadout picker error in",c,err);
+     const missing=JSON.parse(localStorage.getItem("loadoutMissingGuns")||"[]");
+     const pool=(db[c]||[]).filter(w=>!missing.includes(w));
+     load[c]=pool[0]||`No ${c} weapon available`;
+   }
+   if(typeof load[c]==="string"&&!load[c].startsWith("No ")) chosen.push(load[c]);
+ });
  const pet=style==="aggressive"?"Dragon":style==="pusher"?"Dragon":style==="rusher"?"Werewolf":style==="short_long"?"Phoenix":style==="spammer"?"Mech Dino":style==="overpowered"?"Dragon":style.startsWith("hybrid_")?"Phoenix":
 style==="support"?"Robo Dog":style==="sniper"?"Phoenix":"Cyber Cat";
  const grenade=mode==="Point Capture"?"Black Hole":style==="aggressive"?"Cluster Grenade":style==="pusher"?"Cluster Grenade":style==="rusher"?"Time Machine":style==="short_long"?"Black Hole":style==="spammer"?"Poisonous Grenade":style==="overpowered"?"Black Hole":style==="sniper"?"Sticky Mine":"Cyber Grenade";
