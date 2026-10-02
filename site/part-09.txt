@@ -32,12 +32,11 @@ window.rateBuild=function(value){
 };
 document.getElementById("build")?.addEventListener("click",function(event){
  event.preventDefault();
- event.stopImmediatePropagation();
- try{window.safeBuildLoadout();}
+ try{build();}
  catch(err){
-   console.error("Safe loadout builder failed:",err);
+   console.error("Loadout builder failed:",err);
    const out=document.getElementById("output");
-   if(out) out.innerHTML='<div class="error"><strong>Loadout builder hit an unexpected error.</strong><p>Refresh the page and try again. The weapon database remains available.</p></div>';
+   if(out) out.innerHTML='<div class="error"><strong>Loadout builder hit an unexpected error.</strong><p>'+String(err.message||err)+'</p></div>';
    const status=document.getElementById("status");
    if(status) status.textContent="ERROR";
  }
