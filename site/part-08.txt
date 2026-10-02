@@ -77,11 +77,15 @@
      const statFit=(want.includes("spam")?fireRate/12:0)+(want.includes("burst")?damage/12:0)+(want.includes("mobility")?mobility/10:0)+(want.includes("mid")?capacity/20:0);
      const buildNo=Number(localStorage.getItem("loadoutBuildNumber")||0);
      let hash=0; for(let i=0;i<n.length;i++) hash=((hash*31)+n.charCodeAt(i)+buildNo*17)%997;
-     const variation=(hash%11)/4;
+     const variation=(hash%101)/10;
      return preference+role+modeFit+coverage+learned+versatility+categoryFit+tacticSlot+tacticNameBoost+statScore+statFit+levelBonus+missingPenalty+diversityPenalty+variation;
    };
-   return sc(b)-sc(a);
- })[0];
+   const ranked=[...candidates].sort((a,b)=>sc(b)-sc(a));
+   const top=Math.min(5,ranked.length);
+   const buildNo=Number(localStorage.getItem("loadoutBuildNumber")||0);
+   let seed=buildNo*97+cat.length*31;
+   for(let i=0;i<cat.length;i++) seed=(seed*33+cat.charCodeAt(i))%1000003;
+   return ranked[top>1?seed%top:0]||ranked[0]||candidates[0];
 }
 function slot(kind,name,text,extra=""){
  const weaponKinds=["Primary","Backup","Melee","Special","Sniper","Heavy"];
