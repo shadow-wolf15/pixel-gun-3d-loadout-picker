@@ -1,0 +1,147 @@
+s, attack from unexpected angles, and disengage before getting surrounded.":
+style==="mobility"?"Keep moving, use melee and movement tools to reposition quickly, and avoid standing still in open areas.":
+style==="spammer"?"Keep damage flowing, favor high-fire-rate weapons, and swap quickly when a weapon runs low or loses the matchup.":
+style==="overpowered"?"This setup prioritizes the strongest options in the demo database for high pressure, burst damage, and strong matchup coverage.":
+"Use primary for steady damage, backup/special for burst or utility, and heavy when it gives you clear value.";
+ document.getElementById("status").textContent="GENERATED";
+ document.getElementById("output").innerHTML=`<div class="grid">
+ ${slot("Primary",load.Primary,load.Primary.startsWith("No owned ")?"Select an owned primary weapon first.":"Best-fit sustained damage from your inventory") }
+ ${slot("Backup",load.Backup,load.Backup.startsWith("No owned ")?"Select an owned backup weapon first.":"Best-fit burst / close-fight option from your inventory") }
+ ${slot("Melee",load.Melee,load.Melee.startsWith("No owned ")?"Select an owned melee weapon first.":"Best-fit melee and mobility option from your inventory") }
+ ${slot("Special",load.Special,load.Special.startsWith("No owned ")?"Select an owned special weapon first.":"Best-fit utility / control option from your inventory") }
+ ${slot("Sniper",load.Sniper,load.Sniper.startsWith("No owned ")?"Select an owned sniper weapon first.":"Best-fit long-range option from your inventory") }
+ ${slot("Heavy",load.Heavy,load.Heavy.startsWith("No owned ")?"Select an owned heavy weapon first.":"Best-fit area / burst option from your inventory") }
+ ${slot("Pet",pet,"Recommended companion","pet")}
+ ${slot("Grenade",grenade,"Situational utility","grenade")}
+ </div><div class="Loadout Builder"><strong>🧠 Why this loadout?</strong><p>${why}</p>
+ <div class="missing-help"><strong>Missing a recommended gun?</strong> Click “I don't have this gun.” Future builds will avoid it. <button type="button" onclick="clearMissingGuns()">Clear missing-gun list</button></div>
+<section class="missing-gun-list" id="missingGunList">
+  <h3>Guns you said you don't have</h3>
+  <p class="empty-missing">No guns marked as missing yet.</p>
+</section>
+<div class="feedback"><span>Was this build useful?</span><button type="button" onclick="rateBuild(1)">👍</button><button type="button" onclick="rateBuild(-1)">👎</button></div>
+ </div>`;
+ if(window.renderMissingGunList) window.renderMissingGunList();
+}
+window.rateBuild=function(value){
+ const cards=document.querySelectorAll(".slot h3");
+ const f=JSON.parse(localStorage.getItem("loadoutFeedback")||"{}");
+ cards.forEach(x=>f[x.textContent]=(f[x.textContent]||0)+value);
+ localStorage.setItem("loadoutFeedback",JSON.stringify(f));
+ document.querySelector(".feedback").innerHTML="<strong>Thanks! Future builds will learn from your feedback.</strong>";
+};
+document.getElementById("build").addEventListener("click",build);
+document.getElementById("includeEvents")?.addEventListener("change",()=>{if(document.getElementById("output")?.classList.contains("built"))build();});
+</script>
+
+<script>
+window.renderMissingGunList=function(){
+ const box=document.getElementById("missingGunList"); if(!box)return;
+ const a=JSON.parse(localStorage.getItem("loadoutMissingGuns")||"[]");
+ const b=JSON.parse(localStorage.getItem("loadoutMissing")||"[]");
+ const missing=[...new Set([...a,...b])];
+ box.innerHTML="<h3>Guns you said you don't have</h3>";
+ if(!missing.length){box.innerHTML+='<p class="empty-missing">No guns marked as missing yet.</p>';return;}
+ const ul=document.createElement("ul");
+ missing.forEach(name=>{
+   const li=document.createElement("li");
+   const label=document.createElement("span"); label.textContent=name;
+   const btn=document.createElement("button"); btn.type="button"; btn.textContent="I have this gun now";
+   btn.addEventListener("click",()=>window.restoreMissingGun(name));
+   li.append(label,btn); ul.appendChild(li);
+ });
+ box.appendChild(ul);
+};
+window.restoreMissingGun=function(name){
+ ["loadoutMissingGuns","loadoutMissing"].forEach(key=>{
+   const arr=JSON.parse(localStorage.getItem(key)||"[]");
+   localStorage.setItem(key,JSON.stringify(arr.filter(n=>n!==name)));
+ });
+ window.renderMissingGunList();
+ const status=document.getElementById("status");
+ if(status)status.textContent="GUN RESTORED — REGENERATE LOADOUT";
+};
+document.addEventListener("DOMContentLoaded",()=>{window.renderMissingGunList(); renderInventory();});
+document.getElementById("level")?.addEventListener("input",()=>{renderInventory();});
+</script>
+
+
+
+
+
+<script id="missingGunTrackerFix">
+(function(){
+ const KEY="loadoutMissingGuns";
+ function read(){
+   let a=[],b=[];
+   try{a=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){}
+   try{b=JSON.parse(localStorage.getItem("loadoutMissing")||"[]")}catch(e){}
+   return [...new Set([...a,...b].filter(x=>typeof x==="string"))];
+ }
+ function save(list){
+   const clean=[...new Set(list)];
+   localStorage.setItem(KEY,JSON.stringify(clean));
+   localStorage.setItem("loadoutMissing",JSON.stringify(clean));
+ }
+ window.renderMissingGunList=function(){
+   let box=document.getElementById("missingGunList");
+   if(!box){
+     box=document.createElement("section");
+     box.id="missingGunList";box.className="missing-gun-list";
+     const result=document.getElementById("output")||document.querySelector(".results")||document.body;
+     result.appendChild(box);
+   }
+   const missing=read();
+   box.innerHTML="";
+   const heading=document.createElement("h3");
+   heading.textContent="Guns You Said You Don't Have ("+missing.length+")";
+   box.appendChild(heading);
+   if(!missing.length){
+     const empty=document.createElement("p");
+     empty.textContent="No guns marked missing yet. Click “I don't have this gun” on a recommendation.";
+     box.appendChild(empty);return;
+   }
+   const ul=document.createElement("ul");
+   missing.forEach(name=>{
+     const li=document.createElement("li");
+     const label=document.createElement("span");label.textContent=name;
+     const btn=document.createElement("button");btn.type="button";btn.textContent="I have this gun now";
+     btn.addEventListener("click",()=>window.restoreMissingGun(name));
+     li.append(label,btn);ul.appendChild(li);
+   });
+   box.appendChild(ul);
+ };
+ window.markMissingGun=function(name){
+   if(!name)return;
+   save([...read(),name]);
+   document.querySelectorAll(".slot").forEach(card=>{
+     if(card.querySelector("h3")?.textContent===name){
+       const btn=card.querySelector(".missing-btn");
+       if(btn)btn.textContent="Added to missing-gun list";
+     }
+   });
+   window.renderMissingGunList();
+   const status=document.getElementById("status");
+   if(status)status.textContent="MISSING GUN SAVED";
+ };
+ window.restoreMissingGun=function(name){
+   save(read().filter(n=>n!==name));
+   window.renderMissingGunList();
+   const status=document.getElementById("status");
+   if(status)status.textContent="GUN RESTORED — REGENERATE LOADOUT";
+ };
+ window.clearMissingGuns=function(){
+   save([]);
+   window.renderMissingGunList();
+   const status=document.getElementById("status");
+   if(status)status.textContent="MISSING GUN LIST CLEARED";
+ };
+ document.addEventListener("DOMContentLoaded",window.renderMissingGunList);
+ window.addEventListener("load",window.renderMissingGunList);
+})();
+</script>
+
+
+<script id="missingGunButtonDelegation">
+document.addEventListener("click",function(event){
+ const
