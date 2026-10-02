@@ -38,24 +38,32 @@ async function loadFullWeaponDatabase(){
 }
 function renderInventory(){
   if(!inv) return;
-  const level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
   const selected=new Set([...inv.querySelectorAll("input:checked")].map(x=>x.value));
   inv.innerHTML="";
-  const eventList=[...new Set(Object.values(db).flat().filter(w=>eventWeapons.has(w)))].sort((a,b)=>a.localeCompare(b));
-  if(!eventList.length){
-    inv.innerHTML='<div class="sub">No event weapons are currently listed.</div>';
+  const all=[...new Set(Object.entries(db).flatMap(([cat,arr])=>arr.map(w=>JSON.stringify({cat,w}))))].map(x=>JSON.parse(x));
+  all.sort((a,b)=>a.w.localeCompare(b.w));
+  if(!all.length){
+    inv.innerHTML='<div class="sub">Weapon database is empty.</div>';
     return;
   }
-  eventList.forEach(w=>{
-    const meta=weaponUnlockData[w]||{};
+  const frag=document.createDocumentFragment();
+  all.forEach(({cat,w})=>{
+    const isEvent=eventWeapons.has(w);
     const l=document.createElement("label");
     l.className="check";
     const input=document.createElement("input");
-    input.type="checkbox"; input.value=w; input.checked=selected.has(w);
+    input.type="checkbox"; input.value=w;
+    input.checked=isEvent ? selected.has(w) : true;
+    input.dataset.category=cat;
     const span=document.createElement("span");
-    span.textContent=`Event / Special — ${w} • Available from level ${meta.unlockLevel||2}+`;
-    l.append(input,span); inv.appendChild(l);
+    const meta=weaponUnlockData[w]||{};
+    const levelText=Number.isInteger(meta.unlockLevel)?`Level ${meta.unlockLevel}+`:"Level unverified";
+    span.textContent=`${cat} — ${w} • ${isEvent?"Special/Event — mark if owned":"Armory — automatically owned"} • ${levelText}`;
+    l.append(input,span); frag.appendChild(l);
   });
+  inv.appendChild(frag);
+  const status=document.getElementById("levelStatus");
+  if(status) status.textContent=`All ${all.length} weapon entries are listed. Armory weapons are pre-owned automatically; special/event weapons can be checked manually. Unknown-level weapons remain eligible for recommendations.`;
 }
 
 renderInventory();
