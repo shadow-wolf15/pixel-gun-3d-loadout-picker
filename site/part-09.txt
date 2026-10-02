@@ -30,7 +30,17 @@ window.rateBuild=function(value){
  localStorage.setItem("loadoutFeedback",JSON.stringify(f));
  document.querySelector(".feedback").innerHTML="<strong>Thanks! Future builds will learn from your feedback.</strong>";
 };
-document.getElementById("build").addEventListener("click",build);
+document.getElementById("build")?.addEventListener("click",function(event){
+ event.preventDefault();
+ try{build();}
+ catch(err){
+   console.error("Build my loadout failed:",err);
+   const out=document.getElementById("output");
+   if(out) out.innerHTML='<div class="error"><strong>Loadout builder recovered from an error.</strong><p>Try Build again; the picker will use its safe fallback if a weapon record is malformed.</p></div>';
+   const status=document.getElementById("status");
+   if(status) status.textContent="RECOVERED";
+ }
+});
 document.getElementById("includeEvents")?.addEventListener("change",()=>{if(document.getElementById("output")?.classList.contains("built"))build();});
 </script>
 
