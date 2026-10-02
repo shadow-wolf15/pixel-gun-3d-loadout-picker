@@ -1,0 +1,77 @@
+","mid","long"],balanced:["mid","reliable"]
+ }[style]||["mid"];
+ const modeWant={"Team Fight":["support","control","area"],"Deathmatch":["burst","mobility"],"Battle Royale":["long","mobility"],"Point Capture":["control","area"],"Any mode":["reliable","mid"]}[mode]||[];
+ const includeEvents=document.getElementById("includeEvents")?.checked===true;
+ const level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
+ const levelEligible=x=>{const meta=weaponUnlockData[x]; return !meta || !Number.isInteger(meta.unlockLevel) || meta.unlockLevel<=level;};
+ // Every Wiki weapon gets a safe baseline role tag from its real weapon category.
+ // Specific hand-tuned tags below still override/augment these when available.
+ const baseTags={Primary:["mid"],Backup:["short","burst"],Melee:["short","mobility"],Special:["control"],Sniper:["long","burst"],Heavy:["area","burst"]};
+ for(const [category,weapons] of Object.entries(db)) for(const weapon of weapons) if(!tags[weapon]) tags[weapon]=baseTags[category]||["mid"];
+ // Ownership model: normal Armory weapons are automatically owned. Only
+ // event/special-route weapons require an explicit checkbox in the inventory list.
+ // Missing-gun exclusions still apply to every weapon.
+ const available=db[cat].filter(x=>levelEligible(x)&&!missing.includes(x));
+ const candidates=available.filter(x=>{
+   const meta=weaponUnlockData[x];
+   // Weapons without a verified unlock level are always eligible for recommendations.
+   // This keeps them in the build pool even when their acquisition route is uncertain.
+   if(!meta || !Number.isInteger(meta.unlockLevel)) return true;
+   if(eventWeapons.has(x)) return includeEvents && own.includes(x);
+   return true;
+ });
+ if(!candidates.length){
+   return eventWeapons.has(db[cat][0]) && includeEvents
+     ? `No owned ${cat} event weapon selected`
+     : `No ${cat} weapon available at this level`;
+ }
+ const alreadyTags=new Set(chosen.flatMap(n=>tags[n]||[]));
+ return [...candidates].sort((a,b)=>{
+   const sc=n=>{
+     const t=tags[n]||[];
+     const prefRank=(prefs[cat]||[]).indexOf(n);
+     const preference=prefRank<0?0:(prefs[cat].length-prefRank)*2.5;
+     const role=t.reduce((z,x)=>z+(want.includes(x)?5:0),0);
+     const modeFit=t.reduce((z,x)=>z+(modeWant.includes(x)?3:0),0);
+     const coverage=t.reduce((z,x)=>z+(!alreadyTags.has(x)?2.5:0),0);
+     const feedback=(feedback[n]||0)*1.5;
+     const versatility=new Set(t).size*0.8;
+     return preference+role+modeFit+coverage+feedback+versatility;
+   };
+   return sc(b)-sc(a);
+ })[0];
+}
+function slot(kind,name,text,extra=""){
+ const weaponKinds=["Primary","Backup","Melee","Special","Sniper","Heavy"];
+ const action=weaponKinds.includes(kind)?`<button type="button" class="missing-btn" data-missing-gun="${String(name).replace(/&/g,"&amp;").replace(/\"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}">I don't have this gun</button>`:"";
+ return `<article class="slot ${extra}"><div class="kind">${kind}</div><h3>${name}</h3><p>${text}</p>${action}</article>`;
+}
+function build(){
+ const level=Math.max(1,Math.min(65,Number(document.getElementById("level").value)||1)),style=document.getElementById("style").value,mode=document.getElementById("mode").value,own=owned(),pref=preferences[style];
+ const uniqueMeta=Object.fromEntries(Object.keys(weaponUnlockData).map(k=>[k,weaponUnlockData[k]]));
+ const knownLocked=Object.values(uniqueMeta).filter(x=>Number.isInteger(x.unlockLevel)&&x.unlockLevel>level).length;
+ const knownLevels=Object.values(uniqueMeta).filter(x=>Number.isInteger(x.unlockLevel)).length;
+ const unknownCount=Object.values(uniqueMeta).filter(x=>!Number.isInteger(x.unlockLevel)).length;
+ const levelStatus=document.getElementById("levelStatus");
+ if(levelStatus) levelStatus.textContent=`Level ${level}: ${knownLevels} verified unlock records. ${knownLocked} known weapon(s) are above your level. ${unknownCount} weapon(s) have no verified level and are not guessed. Event/special weapons you own can be marked below.`;
+ renderInventory();
+ const load={}; const chosen=[]; Object.keys(db).forEach(c=>{ load[c]=pick(c,own,pref,chosen); if(!load[c].startsWith("No owned ")) chosen.push(load[c]); });
+ const pet=style==="aggressive"?"Dragon":style==="pusher"?"Dragon":style==="rusher"?"Werewolf":style==="short_long"?"Phoenix":style==="spammer"?"Mech Dino":style==="overpowered"?"Dragon":style.startsWith("hybrid_")?"Phoenix":
+style==="support"?"Robo Dog":style==="sniper"?"Phoenix":"Cyber Cat";
+ const grenade=mode==="Point Capture"?"Black Hole":style==="aggressive"?"Cluster Grenade":style==="pusher"?"Cluster Grenade":style==="rusher"?"Time Machine":style==="short_long"?"Black Hole":style==="spammer"?"Poisonous Grenade":style==="overpowered"?"Black Hole":style==="sniper"?"Sticky Mine":"Cyber Grenade";
+ const styleNames={balanced:"balanced",aggressive:"aggressive / rush",pusher:"pusher / push-hard",rusher:"rusher / close-range",sniper:"sniper / long-range",short_long:"mid range",
+hybrid_rush:"rush + range",hybrid_tank:"tank + damage",hybrid_control:"control + damage",hybrid_stealth:"stealth + rush",hybrid_sniper:"sniper + support",hybrid_spam:"spammer + area control",hybrid_mobility:"mobility + rush",hybrid_defense:"defense + long range",hybrid_heavy:"heavy + close range",hybrid_assault:"assault + mid range",hybrid_pusher:"pusher + area control",hybrid_meta:"overpowered + spammer",hybrid_teamrush:"team + rush",hybrid_allrounder:"all-rounder mix",support:"support / team",defensive:"defensive / hold-position",area:"area-control / splash",stealth:"stealth / ambush",mobility:"mobility / fast-movement",spammer:"spammer / high-fire-rate",overpowered:"overpowered / meta-style",casual:"casual / easy"};
+ let why=`At level ${level}, this setup is tuned for ${styleNames[style]} play in ${mode}. `;
+ const matched=Object.values(load).filter(x=>x && !x.startsWith("No ")).length;
+ why+=own.length?`It selected ${matched} weapon${matched===1?"":"s"} strictly from your inventory. Empty categories are shown instead of adding guns you do not own. `:"Normal Armory weapons are automatically available; event/special weapons are used only when you mark them as owned. ";
+ why+=style==="aggressive"?"Keep pressure on, use melee mobility to close gaps, and save heavy for grouped targets.":
+style==="pusher"?"Take space aggressively, pressure objectives, and chain primary → special → heavy to break enemy positions.":
+style==="rusher"?"Get into close range quickly, use mobility to avoid predictable damage, and rely on backup/melee to finish fights.":
+style==="short_range"?"Stay close to opponents, use high-damage close-range weapons, and avoid giving enemies time to reset the fight.":
+style==="sniper"?"Open at range, rotate when pressured, and use special/backup to stop close pushes.":
+style==="long_range"?"Keep distance, take clean shots before enemies can close the gap, and use your backup/special when they push you.":
+style==="short_long"?"Switch between close and long range depending on the fight: use your primary/backup up close and your sniper for safe pressure across the map.":
+style==="support"?"Play near teammates, control space with special/heavy, and avoid taking unnecessary solo fights.":
+style==="defensive"?"Hold strong positions, punish enemy pushes, and prioritize reliable damage over risky chases.":
+style==="area"?"Control chokepoints and objectives, use splash/utility to pressure groups, and deny enemy movement.":
+style==="stealth"?"Look for isolated target
