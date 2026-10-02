@@ -11,7 +11,7 @@
  const KEY="typedOwnedGuns", MODEKEY="typedInventoryMode";
  const get=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"[]").filter(x=>typeof x==="string")}catch(e){return[]}};
  const save=a=>localStorage.setItem(KEY,JSON.stringify([...new Set(a)]));
- const mode=()=>localStorage.getItem(MODEKEY)!=="off";
+ const mode=()=>localStorage.getItem(MODEKEY)==="on";
  function allWeapons(){return Object.entries(db||{}).flatMap(([category,names])=>names.map(name=>({name,category})));}
  function escape(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
  function refresh(){
