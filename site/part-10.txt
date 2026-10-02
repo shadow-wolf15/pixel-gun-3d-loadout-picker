@@ -137,14 +137,14 @@
   };
   function escape(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
   window.safeBuildLoadout=function(){
-    const selected=get(),typedOnly=typedMode(),available=typedOnly?new Set(selected):new Set(Object.values(db||{}).flat()),level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1)),style=document.getElementById("style")?.value||"balanced",mode=document.getElementById("mode")?.value||"Any mode";
+    const selected=get(),typedOnly=typedMode(),includeEvents=document.getElementById("includeEvents")?.checked===true,available=typedOnly?new Set(selected):new Set(Object.values(db||{}).flat()),level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1)),style=document.getElementById("style")?.value||"balanced",mode=document.getElementById("mode")?.value||"Any mode";
     const feedback=(function(){try{return JSON.parse(localStorage.getItem("loadoutFeedback")||"{}")}catch(e){return{}}})();
     const missing=new Set((function(){try{return JSON.parse(localStorage.getItem("loadoutMissingGuns")||"[]")}catch(e){return[]}})());
     const cats=["Primary","Backup","Melee","Special","Sniper","Heavy"],wanted=({balanced:["mid","reliable","burst"],aggressive:["rush","short","burst"],pusher:["pusher","control","area"],rusher:["rush","short","mobility"],sniper:["long","burst"],spammer:["spam","mid","burst"],overpowered:["burst","area","spam"],support:["support","control"],defensive:["defense","tank"],area:["area","control","burst"],stealth:["stealth","mobility"],mobility:["mobility","rush"],casual:["mid","reliable"]}[style]||["mid","reliable"]);
     function tags(cat,n){return (typeof infer==="function"?infer(cat,n):[])}
     const load={};let total=0;
     cats.forEach(function(cat){
-      const pool=(db[cat]||[]).filter(function(n){return available.has(n)&&!missing.has(n)});
+      const pool=(db[cat]||[]).filter(function(n){return available.has(n)&&!missing.has(n)&&(!eventWeapons.has(n)||includeEvents)});
       total+=pool.length;
       if(!pool.length){load[cat]=typedOnly?"No owned "+cat+" gun":"No "+cat+" weapon found";return}
       const scored=pool.map(function(n){const t=tags(cat,n),m=weaponUnlockData[n],levelFit=!m||!Number.isInteger(m.unlockLevel)||m.unlockLevel<=level;let s=(feedback[n]||0)*3+t.length*1.2+(levelFit?3:-2);s+=t.reduce(function(v,x){return v+(wanted.includes(x)?8:0)},0);if(mode==="Point Capture"&&(t.includes("area")||t.includes("control")))s+=5;if(mode==="Deathmatch"&&(t.includes("burst")||t.includes("mobility")))s+=4;return {n:n,s:s}}).sort(function(a,b){return b.s-a.s||a.n.localeCompare(b.n)});
