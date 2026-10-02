@@ -34,7 +34,7 @@ async function loadFullWeaponDatabase(){
   const parseLevel=txt=>{
     let m=txt.match(/(\d+)\s*\(For unlocking(?: it)? in the Armory\)/i);
     if(m)return Number(m[1]);
-    m=txt.match(/\\|\\s*Level Required\\s*=\\s*[^\\n|]*?(\\d+)/i);
+    m=txt.match(/\|\s*Level Required\s*=\s*[^\n|]*?(\d+)/i);
     return m?Number(m[1]):null;
   };
   const parseNumber=(txt,label)=>{
