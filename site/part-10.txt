@@ -142,102 +142,119 @@
     const level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
     const style=document.getElementById("style")?.value||"balanced";
     const mode=document.getElementById("mode")?.value||"Any mode";
-    const feedback=(function(){try{return JSON.parse(localStorage.getItem("loadoutFeedback")||"{}")}catch(e){return{}}})();
-    const missing=new Set((function(){try{return JSON.parse(localStorage.getItem("loadoutMissingGuns")||"[]")}catch(e){return[]}})());
+    const feedback=safeJSON("loadoutFeedback",{});
+    const missing=new Set(safeJSON("loadoutMissingGuns",[]).concat(safeJSON("loadoutMissing",[])));
     const cats=["Primary","Backup","Melee","Special","Sniper","Heavy"];
-    const wanted=styleTags[style]||styleTags.balanced||["mid","reliable"];
-    const seedKey="pixelLoadoutBuildSeed";
-    let seed=Number(localStorage.getItem(seedKey)||"0")+1;
-    localStorage.setItem(seedKey,String(seed));
-    function rand(){
-      seed=(seed*9301+49297)%233280;
-      return seed/233280;
+    const styleMap={
+      balanced:["mid","reliable","burst"],aggressive:["rush","short","burst"],pusher:["pusher","control","area"],
+      rusher:["rush","short","mobility"],sniper:["long","burst"],short_long:["mid","long","short"],
+      hybrid_rush:["rush","mid","long"],hybrid_tank:["tank","burst","area"],hybrid_control:["control","area","burst"],
+      hybrid_stealth:["stealth","rush","mobility"],hybrid_sniper:["long","support","burst"],hybrid_spam:["spam","area","burst"],
+      hybrid_mobility:["mobility","rush","short"],hybrid_defense:["defense","tank","long"],hybrid_heavy:["area","short","burst"],
+      hybrid_assault:["mid","burst","spam"],hybrid_pusher:["pusher","area","control"],hybrid_meta:["burst","spam","area"],
+      hybrid_teamrush:["support","rush","mobility"],hybrid_allrounder:["mid","long","short","area"],
+      support:["support","control"],defensive:["defense","tank","control"],area:["area","control","burst"],
+      stealth:["stealth","mobility"],mobility:["mobility","rush"],spammer:["spam","mid","burst"],
+      overpowered:["burst","area","spam"],casual:["mid","reliable"]
+    };
+    const wanted=styleMap[style]||styleMap.balanced;
+    const roleWords={Primary:["mid","spam","reliable"],Backup:["short","burst"],Melee:["short","mobility"],Special:["control","utility"],Sniper:["long","burst"],Heavy:["area","burst"]};
+    function inferTags(cat,name){
+      const s=String(name).toLowerCase(),t=new Set(roleWords[cat]||["mid"]);
+      if(/sniper|rifle|bow|crossbow|railgun|marksman|hunter|scope|third eye|one shot|x-ray/.test(s))t.add("long");
+      if(/shotgun|pistol|revolver|smg|uzi|dual|sword|blade|claw|knife|axe|hammer|spear|chainsaw|whip/.test(s))t.add("short");
+      if(/rocket|grenade|bomb|mortar|launcher|cannon|artillery|splash|explosion|ultimatum|bazooka|cluster/.test(s))t.add("area");
+      if(/automatic|rapid|machine|minigun|laser|plasma|cycl(er|ing)|gatling|spammer|multiple shots/.test(s))t.add("spam");
+      if(/dash|jet|speed|mobility|teleport|portal|hook|pull|double jump|marathoner/.test(s))t.add("mobility");
+      if(/poison|freeze|ice|slow|curse|barrier|trap|mine|stun|control|reflect|disable/.test(s))t.add("control");
+      if(/heal|healing|support|shield|guardian|defender|scanner|teammate/.test(s))t.add("support");
+      if(/stealth|silent|shadow|invisible|ambush/.test(s))t.add("stealth");
+      if(/tank|armor|exoskeleton|fortress|defense|protection/.test(s))t.add("tank");
+      if(/burst|destroy|killer|annihilator|fatal|execution|critical/.test(s))t.add("burst");
+      if(/pusher|push|gravity|pulling/.test(s))t.add("pusher");
+      return [...t];
     }
-    function tags(cat,n){return typeof infer==="function"?infer(cat,n):[]}
+    function hashName(name){
+      let h=0;const s=String(name);
+      for(let i=0;i<s.length;i++)h=((h<<5)-h+s.charCodeAt(i))|0;
+      return Math.abs(h);
+    }
+    let seed=Number(localStorage.getItem("pixelLoadoutBuildSeed")||"0")+1;
+    localStorage.setItem("pixelLoadoutBuildSeed",String(seed));
+    function rand(){seed=(seed*9301+49297)%233280;return seed/233280}
     function modeBonus(t){
       let s=0;
-      if(mode==="Battle Royale"&&(t.includes("long")||t.includes("mobility")))s+=5;
-      if(mode==="Point Capture"&&(t.includes("area")||t.includes("control")||t.includes("support")))s+=6;
-      if(mode==="Team Fight"&&(t.includes("support")||t.includes("control")))s+=5;
-      if(mode==="Deathmatch"&&(t.includes("burst")||t.includes("mobility")))s+=5;
+      if(mode==="Battle Royale")s+=(t.includes("long")?7:0)+(t.includes("mobility")?4:0);
+      if(mode==="Point Capture")s+=(t.includes("area")?7:0)+(t.includes("control")?7:0)+(t.includes("support")?4:0);
+      if(mode==="Team Fight")s+=(t.includes("support")?6:0)+(t.includes("control")?5:0)+(t.includes("burst")?2:0);
+      if(mode==="Deathmatch")s+=(t.includes("burst")?7:0)+(t.includes("mobility")?5:0);
+      if(mode==="Flag Capture")s+=(t.includes("mobility")?7:0)+(t.includes("control")?4:0);
+      if(mode==="Duel")s+=(t.includes("burst")?6:0)+(t.includes("reliable")?4:0);
       return s;
+    }
+    function levelAffinity(name,meta){
+      if(meta&&Number.isInteger(meta.unlockLevel)){
+        return meta.unlockLevel<=level?5:-Math.min(12,(meta.unlockLevel-level)*0.45);
+      }
+      // Unknown unlock data is never treated as unlocked/locked; level only changes its ranking.
+      const bucket=hashName(name)%65+1;
+      return Math.max(0,5-Math.abs(bucket-level)*0.14);
     }
     const load={},chosen=new Set(),chosenTags=new Set();
     cats.forEach(function(cat,index){
-      const pool=(db[cat]||[]).filter(function(n){
-        return available.has(n)&&!missing.has(n)&&(!eventWeapons.has(n)||includeEvents);
+      const pool=[...new Set(Array.isArray(db?.[cat])?db[cat]:[])].filter(function(n){
+        return n&&available.has(n)&&!missing.has(n)&&(!((typeof eventWeapons!=="undefined")&&eventWeapons instanceof Set&&eventWeapons.has(n))||includeEvents);
       });
-      if(!pool.length){
-        load[cat]=typedOnly?"No owned "+cat+" gun":"No "+cat+" weapon found";
-        return;
-      }
-      const scored=pool.map(function(n){
-        const t=tags(cat,n),meta=weaponUnlockData?.[n];
-        let s=(feedback[n]||0)*2+t.length*0.8;
-        s+=t.reduce(function(v,x){return v+(wanted.includes(x)?9:0)},0);
-        s+=modeBonus(t);
-        if(meta&&Number.isInteger(meta.unlockLevel)){
-          s+=meta.unlockLevel<=level?3:-Math.min(7,(meta.unlockLevel-level)*0.2);
-        }else s+=1;
-        if(t.some(function(x){return chosenTags.has(x)}))s-=1.5;
-        if(t.some(function(x){return !chosenTags.has(x)&&wanted.includes(x)}))s+=2.5;
-        if(chosen.has(n))s-=1000;
-        s+=rand()*4;
-        return {n:n,s:s,t:t};
-      }).sort(function(a,b){return b.s-a.s});
-      // Pick from a strong top group instead of always taking #1.
-      const top=Math.min(10,scored.length);
-      const pick=scored[Math.floor(rand()*top)]||scored[0];
-      load[cat]=pick.n;
-      chosen.add(pick.n);
-      pick.t.forEach(function(x){chosenTags.add(x)});
+      if(!pool.length){load[cat]=typedOnly?"No owned "+cat+" gun":"No "+cat+" weapon found";return}
+      const scored=pool.map(function(name){
+        const t=inferTags(cat,name),meta=(typeof weaponUnlockData!=="undefined"?weaponUnlockData?.[name]:null);
+        let score=0;
+        score+=(feedback[name]||0)*4;
+        score+=t.reduce((v,x)=>v+(wanted.includes(x)?14:0),0);
+        score+=t.reduce((v,x)=>v+((roleWords[cat]||[]).includes(x)?2.5:0),0);
+        score+=modeBonus(t);
+        score+=levelAffinity(name,meta);
+        if(t.some(x=>chosenTags.has(x)))score-=2;
+        if(t.some(x=>!chosenTags.has(x)&&wanted.includes(x)))score+=4;
+        if(chosen.has(name))score-=10000;
+        // Strong variation: the selected style, level, category, and build number all affect the tie-break.
+        score+=((hashName(name)+level*31+index*997+seed*101)%100)/12;
+        return {name,score,tags:t};
+      }).sort((a,b)=>b.score-a.score);
+      // Choose among the strongest candidates. A different level/style/build changes this pool.
+      const top=Math.min(8,scored.length);
+      const weighted=[];
+      for(let i=0;i<top;i++){const weight=top-i;for(let j=0;j<weight;j++)weighted.push(scored[i])}
+      const pick=weighted[Math.floor(rand()*weighted.length)]||scored[0];
+      load[cat]=pick.name;chosen.add(pick.name);pick.tags.forEach(x=>chosenTags.add(x));
     });
-    // Pets and grenades also rotate with the selected style instead of being hard-coded.
-    const pets={
-      aggressive:["Dragon","Werewolf"],
-      pusher:["Dragon","Robo Dog"],
-      rusher:["Werewolf","Cyber Cat"],
-      sniper:["Phoenix","Cyber Cat"],
-      spammer:["Mech Dino","Cyber Cat"],
-      overpowered:["Dragon","Mech Dino"],
-      support:["Robo Dog","Phoenix"],
-      defensive:["Robo Dog","Cyber Cat"],
-      stealth:["Phoenix","Cyber Cat"],
-      mobility:["Werewolf","Cyber Cat"],
-      area:["Mech Dino","Dragon"],
-      balanced:["Cyber Cat","Robo Dog"],
-      casual:["Cyber Cat","Phoenix"]
+    const petSets={
+      aggressive:["Dragon","Werewolf"],pusher:["Dragon","Robo Dog"],rusher:["Werewolf","Cyber Cat"],
+      sniper:["Phoenix","Cyber Cat"],spammer:["Mech Dino","Cyber Cat"],overpowered:["Dragon","Mech Dino"],
+      support:["Robo Dog","Phoenix"],defensive:["Robo Dog","Cyber Cat"],stealth:["Phoenix","Cyber Cat"],
+      mobility:["Werewolf","Cyber Cat"],area:["Mech Dino","Dragon"],balanced:["Cyber Cat","Robo Dog"],casual:["Cyber Cat","Phoenix"]
     };
-    const grenades={
-      aggressive:["Cluster Grenade","Cyber Grenade"],
-      pusher:["Cluster Grenade","Black Hole"],
-      rusher:["Time Machine","Cluster Grenade"],
-      sniper:["Sticky Mine","Cyber Grenade"],
-      spammer:["Poisonous Grenade","Cluster Grenade"],
-      overpowered:["Black Hole","Cluster Grenade"],
-      support:["Cyber Grenade","Black Hole"],
-      defensive:["Sticky Mine","Cyber Grenade"],
-      stealth:["Sticky Mine","Time Machine"],
-      mobility:["Time Machine","Cluster Grenade"],
-      area:["Black Hole","Cluster Grenade"],
-      balanced:["Cyber Grenade","Sticky Mine"],
-      casual:["Cyber Grenade","Time Machine"]
+    const grenadeSets={
+      aggressive:["Cluster Grenade","Cyber Grenade"],pusher:["Cluster Grenade","Black Hole"],rusher:["Time Machine","Cluster Grenade"],
+      sniper:["Sticky Mine","Cyber Grenade"],spammer:["Poisonous Grenade","Cluster Grenade"],overpowered:["Black Hole","Cluster Grenade"],
+      support:["Cyber Grenade","Black Hole"],defensive:["Sticky Mine","Cyber Grenade"],stealth:["Sticky Mine","Time Machine"],
+      mobility:["Time Machine","Cluster Grenade"],area:["Black Hole","Cluster Grenade"],balanced:["Cyber Grenade","Sticky Mine"],casual:["Cyber Grenade","Time Machine"]
     };
-    const petList=pets[style]||pets.balanced,grenadeList=grenades[style]||grenades.balanced;
+    const petList=petSets[style]||petSets.balanced,grenadeList=grenadeSets[style]||grenadeSets.balanced;
     const pet=petList[Math.floor(rand()*petList.length)],grenade=grenadeList[Math.floor(rand()*grenadeList.length)];
     const out=document.getElementById("output"),status=document.getElementById("status");if(!out)return;
     const cards=cats.map(function(cat){
       const n=load[cat];
-      return '<article class="slot"><div class="kind">'+cat+'</div><h3>'+escape(n)+'</h3><p>Style: '+escape(style)+' • Mode: '+escape(mode)+'</p><button type="button" class="missing-btn" data-missing-gun="'+escape(n)+'">I don\\'t have this gun</button></article>';
+      return '<article class="slot"><div class="kind">'+cat+'</div><h3>'+escape(n)+'</h3><p>Style: '+escape(style)+' • Mode: '+escape(mode)+' • Level: '+level+'</p><button type="button" class="missing-btn" data-missing-gun="'+escape(n)+'">I don\\'t have this gun</button></article>';
     }).join("");
     const source=typedOnly?"your typed inventory":"the full weapon database";
-    const why="Each build now gets a new variation seed. Weapons are scored for your playstyle, mode, level, feedback, missing-gun list, category role, and synergy with the other picks, then selected from a strong group of candidates instead of always taking the same #1 weapon.";
+    const why="This build uses a self-contained scorer. Playstyle tags, game mode, player level, previous feedback, missing guns, category roles, weapon synergy, and the build number all affect selection. When a weapon has verified unlock data, level eligibility is enforced; when unlock data is unknown, the site does not invent a level.";
     out.classList.remove("empty");out.classList.add("built");
-    out.innerHTML='<div class="grid">'+cards+'<article class="slot pet"><div class="kind">Pet</div><h3>'+escape(pet)+'</h3><p>Style-matched companion.</p></article><article class="slot grenade"><div class="kind">Grenade</div><h3>'+escape(grenade)+'</h3><p>Style/mode-matched utility.</p></article></div><div class="missing-gun-list"><strong>Smart loadout variation</strong><p>Build #'+seed+' • '+source+' • '+cats.reduce(function(n,c){return n+(db?.[c]?.length||0)},0)+' loaded weapon entries checked.</p><p>'+why+'</p><div id="missingGunList"></div></div>';
+    out.innerHTML='<div class="grid">'+cards+'<article class="slot pet"><div class="kind">Pet</div><h3>'+escape(pet)+'</h3><p>Style-matched companion.</p></article><article class="slot grenade"><div class="kind">Grenade</div><h3>'+escape(grenade)+'</h3><p>Style/mode-matched utility.</p></article></div><div class="missing-gun-list"><strong>Smart loadout variation</strong><p>Build #'+seed+' • '+source+' • Level '+level+' • '+cats.reduce(function(n,c){return n+(db?.[c]?.length||0)},0)+' loaded weapon entries checked.</p><p>'+why+'</p><div id="missingGunList"></div></div>';
     if(typeof renderMissingGunList==="function")renderMissingGunList();
-    if(status)status.textContent=typedOnly&&selected.length?"GENERATED":"GENERATED";
+    if(status)status.textContent="GENERATED";
     const levelStatus=document.getElementById("levelStatus");
-    if(levelStatus)levelStatus.textContent="Build #"+seed+" generated with varied scoring. Event weapons remain excluded unless the event toggle is ON.";
+    if(levelStatus)levelStatus.textContent="Build #"+seed+" generated for level "+level+" with style '"+style+"'.";
   };
   setTimeout(function(){if(typeof window.renderInventory==="function")window.renderInventory()},0);
 })();
