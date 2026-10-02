@@ -57,8 +57,7 @@
      : `No ${cat} weapon available at this level`;
  }
  const alreadyTags=new Set(chosen.flatMap(n=>tags[n]||[]));
- return [...candidates].sort((a,b)=>{
-   const sc=n=>{
+ const sc=n=>{
      const t=tags[n]||[];
      const prefRank=(prefs[cat]||[]).indexOf(n);
      const preference=prefRank<0?0:(prefs[cat].length-prefRank)*3.5;
