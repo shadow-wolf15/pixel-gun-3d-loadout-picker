@@ -31,7 +31,7 @@
 </select>
 <button class="primary" id="build">⚡ Build my loadout</button>
 <label class="title">Select your own guns</label>
-<div class="sub" style="margin-bottom:8px">Normal Armory weapons are automatically treated as owned. Use this list only to mark the <strong>event / seasonal / special-route weapons</strong> you actually own.</div>
+<div class="sub" style="margin-bottom:8px">Type the guns you actually own above. The loadout builder will choose only from your typed inventory. You can still use the list below to check or uncheck weapons.</div>
 <div class="inventory" id="inventory"></div>
 <div class="legend">Recommendations are based on the weapon list built into this demo and may not reflect the latest game balance.</div>
 </aside>
