@@ -65,7 +65,9 @@
      const coverage=t.reduce((z,x)=>z+(!alreadyTags.has(x)?3:0),0);
      const learned=(feedback[n]||0)*2.25;
      const versatility=new Set(t).size*1.15;
-     const categoryFit=(cat==="Sniper"&&t.includes("long")?3:0)+(cat==="Melee"&&t.includes("mobility")?2:0)+(cat==="Heavy"&&t.includes("area")?2:0);\n     const tacticSlot=tacticSlotWeights[cat]||0;\n     const tacticNameBoost=(style==="sniper"&&/sniper|rifle|railgun|bow|marksman|hunter/i.test(n)?4:0)+(style==="spammer"&&/automatic|rapid|machine|minigun|gatling|cycler|laser|plasma/i.test(n)?4:0)+(style==="stealth"&&/stealth|silent|shadow|poison|ninja|ambush/i.test(n)?4:0)+(style==="pusher"&&/launcher|rocket|howitzer|cannon|splash|portal|pulling/i.test(n)?4:0)+(style==="area"&&/rocket|grenade|bomb|mortar|launcher|splash|howitzer|cannon|area/i.test(n)?4:0)+(style==="mobility"&&/sword|saber|blade|claw|dash|portal|jet|hook|speed/i.test(n)?4:0);
+     const categoryFit=(cat==="Sniper"&&t.includes("long")?3:0)+(cat==="Melee"&&t.includes("mobility")?2:0)+(cat==="Heavy"&&t.includes("area")?2:0);
+     const tacticSlot=tacticSlotWeights[cat]||0;
+     const tacticNameBoost=(style==="sniper"&&/sniper|rifle|railgun|bow|marksman|hunter/i.test(n)?4:0)+(style==="spammer"&&/automatic|rapid|machine|minigun|gatling|cycler|laser|plasma/i.test(n)?4:0)+(style==="stealth"&&/stealth|silent|shadow|poison|ninja|ambush/i.test(n)?4:0)+(style==="pusher"&&/launcher|rocket|howitzer|cannon|splash|portal|pulling/i.test(n)?4:0)+(style==="area"&&/rocket|grenade|bomb|mortar|launcher|splash|howitzer|cannon|area/i.test(n)?4:0)+(style==="mobility"&&/sword|saber|blade|claw|dash|portal|jet|hook|speed/i.test(n)?4:0);
      const missingPenalty=missing.includes(n)?-1000:0;
      const levelBonus=(()=>{const m=weaponUnlockData[n]; if(!m||!Number.isInteger(m.unlockLevel)) return 0; return Math.max(0,2-Math.abs(level-m.unlockLevel)/15);})();
      const diversityPenalty=chosen.includes(n)?-1000:0;
