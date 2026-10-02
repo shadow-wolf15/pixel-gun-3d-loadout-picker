@@ -38,7 +38,7 @@ async function loadFullWeaponDatabase(){
     return m?Number(m[1]):null;
   };
   const parseNumber=(txt,label)=>{
-    const m=txt.match(new RegExp("\\|\\\\s*"+label+"\\\\s*=\\\\s*[^\\n|]*?(\\\\d+(?:\\\\.\\\\d+)?)","i"));
+    const m=txt.match(new RegExp("\\|\\s*"+label+"\\s*=\\s*[^\\n|]*?(\\d+(?:\\.\\d+)?)","i"));
     return m?Number(m[1]):null;
   };
   const enrich=async(names)=>{
