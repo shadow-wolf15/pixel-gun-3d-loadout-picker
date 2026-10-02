@@ -6,5 +6,72 @@
  btn.textContent="Added to missing-gun list";btn.disabled=true;
 });
 </script>
+
+<script id="safeLoadoutEngine">
+(function(){
+  const cats=["Primary","Backup","Melee","Special","Sniper","Heavy"];
+  const roleWords={Primary:["mid","spam","reliable"],Backup:["short","burst"],Melee:["short","mobility"],Special:["control","utility"],Sniper:["long","burst"],Heavy:["area","burst"]};
+  const styleTags={balanced:["mid","reliable","burst"],aggressive:["rush","short","burst"],pusher:["pusher","control","area"],rusher:["rush","short","mobility"],sniper:["long","burst"],short_long:["mid","long","short"],hybrid_rush:["rush","mid","long"],hybrid_tank:["tank","burst","area"],hybrid_control:["control","area","burst"],hybrid_stealth:["stealth","rush","mobility"],hybrid_sniper:["long","support","burst"],hybrid_spam:["spam","area","burst"],hybrid_mobility:["mobility","rush","short"],hybrid_defense:["defense","tank","long"],hybrid_heavy:["area","short","burst"],hybrid_assault:["mid","burst","spam"],hybrid_pusher:["pusher","area","control"],hybrid_meta:["burst","spam","area"],hybrid_teamrush:["support","rush","mobility"],hybrid_allrounder:["mid","long","short","area"],support:["support","control"],defensive:["defense","tank","control"],area:["area","control","burst"],stealth:["stealth","mobility"],mobility:["mobility","rush"],spammer:["spam","mid","burst"],overpowered:["burst","area","spam"],casual:["mid","reliable"]};
+  function safeJSON(key,fallback){try{const x=JSON.parse(localStorage.getItem(key)||"");return x??fallback}catch(e){return fallback}}
+  function infer(cat,name){
+    const s=String(name).toLowerCase(),t=new Set(roleWords[cat]||["mid"]);
+    if(/sniper|rifle|bow|crossbow|railgun|marksman|hunter|scope|third eye|one shot/.test(s))t.add("long");
+    if(/shotgun|pistol|revolver|smg|uzi|dual|sword|blade|claw|knife|axe|hammer|spear|chainsaw|whip/.test(s))t.add("short");
+    if(/rocket|grenade|bomb|mortar|launcher|cannon|artillery|splash|explosion|ultimatum|bazooka/.test(s))t.add("area");
+    if(/automatic|rapid|machine|minigun|laser|plasma|cycl(er|ing)|gatling|spammer/.test(s))t.add("spam");
+    if(/dash|jet|speed|mobility|teleport|portal|hook|pull/.test(s))t.add("mobility");
+    if(/poison|freeze|ice|slow|curse|barrier|trap|mine|stun|control|reflect/.test(s))t.add("control");
+    if(/heal|healing|support|shield|guardian|defender|scanner/.test(s))t.add("support");
+    if(/stealth|silent|shadow|invisible|ambush/.test(s))t.add("stealth");
+    if(/tank|armor|exoskeleton|fortress|defense/.test(s))t.add("tank");
+    if(/burst|destroy|killer|annihilator|fatal|execution/.test(s))t.add("burst");
+    return [...t];
+  }
+  function escape(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  window.safeBuildLoadout=function(){
+    const level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
+    const style=document.getElementById("style")?.value||"balanced";
+    const mode=document.getElementById("mode")?.value||"Any mode";
+    const missing=new Set(safeJSON("loadoutMissingGuns",[]).concat(safeJSON("loadoutMissing",[])));
+    const feedback=safeJSON("loadoutFeedback",{});
+    const wanted=styleTags[style]||styleTags.balanced,chosen=new Set(),load={};
+    cats.forEach(function(cat){
+      const pool=[...new Set(Array.isArray(window.db?.[cat])?window.db[cat]:[])].filter(function(n){return n&&!missing.has(n)});
+      if(!pool.length){load[cat]="No "+cat+" weapons found";return;}
+      const scored=pool.map(function(name){
+        const tags=window.tags?.[name]||infer(cat,name);
+        let score=(feedback[name]||0)*3+new Set(tags).size*1.2;
+        score+=tags.reduce(function(n,t){return n+(wanted.includes(t)?8:0)},0);
+        score+=tags.reduce(function(n,t){return n+((roleWords[cat]||[]).includes(t)?2:0)},0);
+        if(mode==="Battle Royale"&&tags.includes("long"))score+=5;
+        if(mode==="Point Capture"&&(tags.includes("area")||tags.includes("control")))score+=5;
+        if(mode==="Team Fight"&&(tags.includes("support")||tags.includes("control")))score+=4;
+        if(mode==="Deathmatch"&&(tags.includes("burst")||tags.includes("mobility")))score+=4;
+        const meta=window.weaponUnlockData?.[name];
+        if(meta&&Number.isInteger(meta.unlockLevel)){if(meta.unlockLevel<=level)score+=2;else score-=Math.min(8,(meta.unlockLevel-level)*0.15)}else score+=1;
+        if(chosen.has(name))score-=10000;
+        return {name:name,score:score,tags:tags};
+      }).sort(function(a,b){return b.score-a.score||a.name.localeCompare(b.name)});
+      const pick=scored.find(function(x){return !chosen.has(x.name)})||scored[0];
+      load[cat]=pick.name;chosen.add(pick.name);
+    });
+    const pet=style==="aggressive"||style==="pusher"||style==="overpowered"?"Dragon":style==="rusher"?"Werewolf":style==="spammer"?"Mech Dino":style==="support"?"Robo Dog":style==="sniper"?"Phoenix":"Cyber Cat";
+    const grenade=mode==="Point Capture"||style==="area"?"Black Hole":style==="aggressive"||style==="pusher"?"Cluster Grenade":style==="rusher"?"Time Machine":style==="spammer"?"Poisonous Grenade":style==="sniper"?"Sticky Mine":"Cyber Grenade";
+    const out=document.getElementById("output"),status=document.getElementById("status");if(!out)return;
+    const cards=cats.map(function(cat){return '<article class="slot"><div class="kind">'+cat+'</div><h3>'+escape(load[cat])+'</h3><p>Selected from the full '+cat+' weapon pool.</p><button type="button" class="missing-btn" data-missing-gun="'+escape(load[cat])+'">I don\'t have this gun</button></article>'}).join("");
+    const why="Rebuilt generator: it scores the entire loaded weapon database using your level, playstyle, mode, weapon roles, previous feedback, and your missing-gun list. Unknown-level weapons are not discarded.";
+    out.classList.remove("empty");out.classList.add("built");
+    out.innerHTML='<div class="grid">'+cards+'<article class="slot pet"><div class="kind">Pet</div><h3>'+escape(pet)+'</h3><p>Recommended companion.</p></article><article class="slot grenade"><div class="kind">Grenade</div><h3>'+escape(grenade)+'</h3><p>Recommended utility.</p></article></div><div class="Loadout Builder"><strong>Why this loadout?</strong><p>'+why+'</p><section class="missing-gun-list" id="missingGunList"></section><div class="feedback"><span>Was this build useful?</span><button type="button" data-rate-build="1">👍</button><button type="button" data-rate-build="-1">👎</button></div></div>';
+    if(typeof window.renderMissingGunList==="function")window.renderMissingGunList();
+    if(status)status.textContent="GENERATED";
+    const levelStatus=document.getElementById("levelStatus");
+    if(levelStatus)levelStatus.textContent="Generated from "+cats.reduce(function(n,c){return n+(window.db?.[c]?.length||0)},0)+" loaded weapon entries across all six categories. Missing guns are excluded.";
+  };
+  document.addEventListener("click",function(e){
+    const rate=e.target.closest("button[data-rate-build]");
+    if(rate){e.preventDefault();window.rateBuild?.(Number(rate.dataset.rateBuild));}
+  },true);
+})();
+</script>
 </body>
 </html>
