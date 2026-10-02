@@ -1,4 +1,20 @@
  const modeWant={"Team Fight":["support","control","area"],"Deathmatch":["burst","mobility"],"Battle Royale":["long","mobility"],"Point Capture":["control","area"],"Any mode":["reliable","mid"]}[mode]||[];
+ const tacticSlotWeights={
+  balanced:{Primary:2,Backup:2,Melee:2,Special:2,Sniper:2,Heavy:2},aggressive:{Primary:5,Backup:7,Melee:10,Special:4,Sniper:-2,Heavy:5},
+  pusher:{Primary:6,Backup:5,Melee:8,Special:9,Sniper:-3,Heavy:10},rusher:{Primary:5,Backup:8,Melee:12,Special:5,Sniper:-5,Heavy:4},
+  sniper:{Primary:3,Backup:2,Melee:-3,Special:5,Sniper:14,Heavy:3},short_long:{Primary:5,Backup:5,Melee:5,Special:4,Sniper:9,Heavy:5},
+  support:{Primary:4,Backup:2,Melee:-2,Special:12,Sniper:5,Heavy:8},defensive:{Primary:5,Backup:3,Melee:-3,Special:10,Sniper:8,Heavy:9},
+  area:{Primary:4,Backup:3,Melee:-2,Special:11,Sniper:2,Heavy:13},stealth:{Primary:4,Backup:7,Melee:9,Special:10,Sniper:7,Heavy:0},
+  mobility:{Primary:4,Backup:7,Melee:12,Special:8,Sniper:-2,Heavy:0},spammer:{Primary:10,Backup:8,Melee:2,Special:7,Sniper:-3,Heavy:9},
+  overpowered:{Primary:8,Backup:7,Melee:5,Special:8,Sniper:6,Heavy:11},casual:{Primary:6,Backup:5,Melee:4,Special:5,Sniper:3,Heavy:5},
+  hybrid_rush:{Primary:6,Backup:8,Melee:10,Special:6,Sniper:4,Heavy:6},hybrid_tank:{Primary:6,Backup:4,Melee:3,Special:8,Sniper:4,Heavy:12},
+  hybrid_control:{Primary:5,Backup:3,Melee:0,Special:13,Sniper:5,Heavy:11},hybrid_stealth:{Primary:5,Backup:8,Melee:10,Special:11,Sniper:6,Heavy:2},
+  hybrid_sniper:{Primary:4,Backup:3,Melee:-1,Special:11,Sniper:13,Heavy:7},hybrid_spam:{Primary:11,Backup:8,Melee:2,Special:10,Sniper:-2,Heavy:12},
+  hybrid_mobility:{Primary:5,Backup:9,Melee:13,Special:8,Sniper:1,Heavy:1},hybrid_defense:{Primary:5,Backup:3,Melee:-2,Special:11,Sniper:10,Heavy:12},
+  hybrid_heavy:{Primary:5,Backup:7,Melee:8,Special:6,Sniper:-2,Heavy:14},hybrid_assault:{Primary:11,Backup:7,Melee:7,Special:7,Sniper:4,Heavy:8},
+  hybrid_pusher:{Primary:7,Backup:5,Melee:9,Special:12,Sniper:-3,Heavy:13},hybrid_meta:{Primary:9,Backup:8,Melee:5,Special:9,Sniper:5,Heavy:13},
+  hybrid_teamrush:{Primary:6,Backup:5,Melee:7,Special:12,Sniper:3,Heavy:8},hybrid_allrounder:{Primary:7,Backup:6,Melee:6,Special:7,Sniper:7,Heavy:7}
+ }[style]||{Primary:2,Backup:2,Melee:2,Special:2,Sniper:2,Heavy:2};
  const includeEvents=document.getElementById("includeEvents")?.checked===true;
  const level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
  const levelEligible=x=>{const meta=weaponUnlockData[x]; return !meta || !Number.isInteger(meta.unlockLevel) || meta.unlockLevel<=level;};
@@ -49,11 +65,11 @@
      const coverage=t.reduce((z,x)=>z+(!alreadyTags.has(x)?3:0),0);
      const learned=(feedback[n]||0)*2.25;
      const versatility=new Set(t).size*1.15;
-     const categoryFit=(cat==="Sniper"&&t.includes("long")?3:0)+(cat==="Melee"&&t.includes("mobility")?2:0)+(cat==="Heavy"&&t.includes("area")?2:0);
+     const categoryFit=(cat==="Sniper"&&t.includes("long")?3:0)+(cat==="Melee"&&t.includes("mobility")?2:0)+(cat==="Heavy"&&t.includes("area")?2:0);\n     const tacticSlot=tacticSlotWeights[cat]||0;\n     const tacticNameBoost=(style==="sniper"&&/sniper|rifle|railgun|bow|marksman|hunter/i.test(n)?4:0)+(style==="spammer"&&/automatic|rapid|machine|minigun|gatling|cycler|laser|plasma/i.test(n)?4:0)+(style==="stealth"&&/stealth|silent|shadow|poison|ninja|ambush/i.test(n)?4:0)+(style==="pusher"&&/launcher|rocket|howitzer|cannon|splash|portal|pulling/i.test(n)?4:0)+(style==="area"&&/rocket|grenade|bomb|mortar|launcher|splash|howitzer|cannon|area/i.test(n)?4:0)+(style==="mobility"&&/sword|saber|blade|claw|dash|portal|jet|hook|speed/i.test(n)?4:0);
      const missingPenalty=missing.includes(n)?-1000:0;
      const levelBonus=(()=>{const m=weaponUnlockData[n]; if(!m||!Number.isInteger(m.unlockLevel)) return 0; return Math.max(0,2-Math.abs(level-m.unlockLevel)/15);})();
      const diversityPenalty=chosen.includes(n)?-1000:0;
-     return preference+role+modeFit+coverage+learned+versatility+categoryFit+levelBonus+missingPenalty+diversityPenalty;
+     return preference+role+modeFit+coverage+learned+versatility+categoryFit+tacticSlot+tacticNameBoost+levelBonus+missingPenalty+diversityPenalty;
    };
    return sc(b)-sc(a);
  })[0];
