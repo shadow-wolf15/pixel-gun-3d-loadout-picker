@@ -69,7 +69,14 @@
      const missingPenalty=missing.includes(n)?-1000:0;
      const levelBonus=(()=>{const m=weaponUnlockData[n]; if(!m||!Number.isInteger(m.unlockLevel)) return 0; return Math.max(0,2-Math.abs(level-m.unlockLevel)/15);})();
      const diversityPenalty=chosen.includes(n)?-1000:0;
-     return preference+role+modeFit+coverage+learned+versatility+categoryFit+tacticSlot+tacticNameBoost+levelBonus+missingPenalty+diversityPenalty;
+     const stats=window.weaponStats?.[n]||{};
+     const fireRate=Number(stats.fireRate)||0, damage=Number(stats.damage)||0, capacity=Number(stats.capacity)||0, mobility=Number(stats.mobility)||0;
+     const statScore=(damage/20)+(fireRate/20)+(capacity/12)+(mobility/20);
+     const statFit=(want.includes("spam")?fireRate/12:0)+(want.includes("burst")?damage/12:0)+(want.includes("mobility")?mobility/10:0)+(want.includes("mid")?capacity/20:0);
+     const buildNo=Number(localStorage.getItem("loadoutBuildNumber")||0);
+     let hash=0; for(let i=0;i<n.length;i++) hash=((hash*31)+n.charCodeAt(i)+buildNo*17)%997;
+     const variation=(hash%11)/4;
+     return preference+role+modeFit+coverage+learned+versatility+categoryFit+tacticSlot+tacticNameBoost+statScore+statFit+levelBonus+missingPenalty+diversityPenalty+variation;
    };
    return sc(b)-sc(a);
  })[0];
