@@ -1,0 +1,99 @@
+gun": {unlockLevel:1, source:"Armory", acquisition:"Starter/Common progression"},
+  "Dual Shotguns": {unlockLevel:1, source:"Armory", acquisition:"Starter/Common progression"},
+  "AK-48": {unlockLevel:3, source:"Armory", acquisition:"Progression"},
+  "Combat Rifle": {unlockLevel:8, source:"Armory", acquisition:"Progression"},
+  "Desert Fighter": {unlockLevel:1, source:"Battle Royale", acquisition:"Battle Royale progression"},
+  "Assault Shotgun": {unlockLevel:11, source:"Armory", acquisition:"Progression"},
+  "Alien Rifle": {unlockLevel:17, source:"Armory", acquisition:"Progression"},
+  "Crystal Laser Cannon": {unlockLevel:22, source:"Armory", acquisition:"Progression"},
+  "Casanova": {unlockLevel:23, source:"Armory", acquisition:"Progression"},
+  "Predator": {unlockLevel:26, source:"Armory", acquisition:"Progression"},
+  "Army Rifle": {unlockLevel:27, source:"Armory", acquisition:"Progression"},
+  "Cooler": {unlockLevel:30, source:"Armory", acquisition:"Progression"},
+  "Assault Machine Gun": {unlockLevel:33, source:"Armory", acquisition:"Progression"},
+  "Brave Patriot": {unlockLevel:35, source:"Armory", acquisition:"Progression"},
+  "Dual Uzi": {unlockLevel:38, source:"Armory", acquisition:"Progression"},
+  "AK Mini": {unlockLevel:38, source:"Armory", acquisition:"Progression"},
+  "Adamant Laser Cannon": {unlockLevel:42, source:"Armory", acquisition:"Progression"},
+  "Cyber Machine Gun": {unlockLevel:49, source:"Armory", acquisition:"Progression"},
+  "Bee Swarm Spell": {unlockLevel:53, source:"Armory", acquisition:"Progression"},
+  "Champion Peacemaker": {unlockLevel:55, source:"Armory", acquisition:"Progression"},
+  "Last Squeak": {unlockLevel:2, source:"Gallery / Trader's Van", acquisition:"Gallery / Trader's Van"},
+  "Ice Chaser": {unlockLevel:6, source:"Gallery", acquisition:"Gallery purchase (also Super Lottery / event)"},
+  "Alien Gun": {unlockLevel:3, source:"Campaign", acquisition:"Campaign (Area 52)"},
+  "Energy Assault Rifle": {unlockLevel:54, source:"Armory", acquisition:"Armory"},
+  "Future Rifle": {unlockLevel:21, source:"Armory", acquisition:"Armory"},
+  "Hero": {unlockLevel:26, source:"Armory", acquisition:"Armory"},
+  "Hand Minigun": {unlockLevel:13, source:"Starter Pack", acquisition:"Starter Pack (level 13+)"},
+  "Golden Friend": {unlockLevel:null, source:"Lucky Chest / Gallery", acquisition:"Not treated as level-unlocked without a verified current Armory level"},
+  "Ultimatum": {unlockLevel:null, source:"Cyber Season / Gallery", acquisition:"Seasonal/event route; no guessed level"},
+  "Stormtrooper Exoskeleton": {unlockLevel:null, source:"Scientific Lab Set / Gallery", acquisition:"Set/Gallery route; no guessed level"},
+  "Neutron Pulsator": {unlockLevel:null, source:"Armory", acquisition:"Armory; current verified level not available in source data"},
+  "Laser Cycler": {unlockLevel:null, source:"Digital Hero Set / Gallery", acquisition:"Set/Gallery route; no guessed level"},
+  "Dual Anger": {unlockLevel:null, source:"Gallery / event routes", acquisition:"No verified current level in source data"},
+  "Exterminator": {unlockLevel:null, source:"Armory / Gallery", acquisition:"No verified current level in source data"},
+  "Christmas Ultimatum": {unlockLevel:null, source:"Seasonal/event", acquisition:"Event/seasonal"},
+  "Easter Bazooka": {unlockLevel:null, source:"Seasonal/event", acquisition:"Event/seasonal"}
+};
+const eventWeapons = new Set(["Rumble","Abyssal Altar","Accurate Bubbler","Acid Shotgun","Agent Valentine","Aloha! Boom Boom!","Ancient Baobab","Anniversary Automatic Peacemaker","Anomaly Compass","Aurora Striker","Authority","Aztec Death Whistle","Bad Comment","Balloon Cannon","Black Mamba","Black Obelisk","Blazefanner","Blinder","Blot Shotgun","Boar's Roar","Boned Death","Bro Steamer","Cheater Hunter","Checkmate","Chef's Bounty","Chickaboom!","Christmas Delivery","Christmas Spirit","Chrome Heart","Clouds Disperser","Clouds Mystery","Combat Candy","Combat Fireplace","Combat Overlords","Cookie Minigun","Corrupted UZI","Cosmic Geode","Cosmic Wayfarer","Crescent Power","Crimson Treat","Cyborg Hands","Dead Lock","Deadly Icicle","Deadly Shark","Deadly Tail","Debts Collector","Demonic Crusher","Desert's Judgement","Dino Slayer","Disc Battle Station","Disguised Rifle","Dragon's Wrath","Dragoneer","Eckodile Rifle","Egg Colorant","Enchanting Altar","End of Fairytale","Evil Snowman","Exquisite Bagpipes","Flame Horse","Flaming Lotus","Gift Stitcher","Glitched Machine Gun","Golden Bros","Gum Rifle","Gun Force PGX","Harbinger of Ragnarok","Hard Corn","Healing Carp","Heart Maze","Heavy Elf Crossbow","Hexrunner","High Voltage Propagator","Holy Shotgun","Ice Chaser","Ice Giant Rifle","Ice King's Fury","Icicle Minigun","Infinite Curvature","Johnny P.","Laser Assistant","Last Kiss","Last Squeak","Like Booster","Liquid Fire","Lucky Strike","Christmas Ultimatum","Easter Bazooka"]);
+for (const name of eventWeapons) {
+  weaponUnlockData[name] = {unlockLevel:2, source:"Event / Lottery / Pixel Pass / Trader's Van / Set crafting", acquisition:"Special event route; available from multiplayer unlock (level 2+); stats may scale with profile level or require later upgrades"};
+}
+const verifiedArmoryProgressionUpdates = {
+  "Firefighter":2,
+  "Eindringling":4,
+  "Future Rifle":6,
+  "Impulse Rifle":9,
+  "Heavy Shotgun":13,
+  "Large-Caliber Machine Gun":15,
+  "Hand Minigun":19,
+  "Energy Assault Rifle":21,
+  "Gargoyle Shotgun":24,
+  "Future Police Rifle":25,
+  "Hellraiser":26,
+  "Hero":29,
+  "Flat Rifle":31,
+  "Eliminator X2":32,
+  "Frank Sheepone":34,
+  "Elven Killer Rifle":35,
+  "Impulse Minigun":39,
+  "Full Moon Rifle":41,
+  "Invader":44,
+  "Goo Substance Rifle":46,
+  "Hand Gatling":47,
+  "Heavy Drill Rifle":52,
+  "Industrial Nailer":54
+};
+for (const [name, level] of Object.entries(verifiedArmoryProgressionUpdates)) {
+  weaponUnlockData[name] = {unlockLevel:level, source:"Armory", acquisition:"Native Armory progression"};
+}
+
+const heavyArmoryProgressionUpdates = {
+  "Rocket Launcher":2,
+  "Signal Pistol":1,
+  "Redneck's Bazooka":5,
+  "Rocket Jumper":9,
+  "Military Grenade Launcher":10,
+  "Piranha":17,
+  "Mines Launcher":24,
+  "Meteor Shower":26,
+  "Pumpkin Thrower":29,
+  "Rocket Crossbow":30,
+  "Wizard Wand":31,
+  "Manual Destroyer":32,
+  "Paintball Machine Gun":38,
+  "Quadruple Death":41,
+  "Portal Cannon":43,
+  "Revenger":45,
+  "Soda Launcher":4,
+  "Stinger":12,
+  "Toy Bomber":18,
+  "Tesla Cannon":22,
+  "Smart Bullet Bazooka":35,
+  "Stinger 3000":39,
+  "Solar Power Cannon":49
+};
+for (const [name, level] of Object.entries(heavyArmoryProgressionUpdates)) {
+  weaponUnlockData[name] = {unlockLevel:level, source:"Armory", acquisition:"Native Armory progression"};
+}
+const heavySpecialEventWeapons = ["Mad Colorer","Manga Gun","Manticore","Maximum Cruelty","Medusa","Meteorite Destroyer","Missile Thrower","Monsters Hot Pot","Moon Phaser","New Gen Spammer","Nutcracker","Offensive Catapult","Offensive Fireworks","Offensive Rocket System","Offensive Rocket System (Legendary)","Otherworldly Wanderer","Pasta Maker","Perfect Rocket Launcher","PGA-06 TV","Pillar of Mictlan","Pixel Games","Pixel-Cola Refresher","Plague Spreader","Plan B","Plastic Bazooka","Plunder Blaster","Portal Rifle","Portalium Radiation Station","Primal Beast","Project \"Red Button\"","Proton Freezer","Pully-Blasty","Raged Bugger","Raven Staff","Red List","Render Station","Renegade","Rocket Hands","Royal Ashbringer","Saboteur","Sad Magnet","Scarab Shrine","Scary Bunny","Scorching Mauler","Secret Burger 
