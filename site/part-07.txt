@@ -137,7 +137,32 @@ function pick(cat,own,prefs,chosen=[]){
   "Bedivere & Lamorak":["short","tank"],"Christmas Ultimatum":["area","burst"],"Solar Flare":["area","control"],"Cthulhu Legacy":["area","tank"],"Easter Bazooka":["area","burst"]
  };
  const want={
-  aggressive:["rush","short","burst"],pusher:["pusher","control","area"],rusher:["rush","short","mobility"],
-  sniper:["long","burst"],support:["support","control","area"],defensive:["defense","tank"],area:["area","control"],
-  stealth:["stealth","mobility"],mobility:["mobility","rush"],spammer:["spam","mid"],overpowered:["burst","area"],
-  casual:["mid"],short_long:["short
+  balanced:["mid","reliable"],
+  aggressive:["rush","short","burst","mobility"],
+  pusher:["pusher","control","area","rush"],
+  rusher:["rush","short","mobility","burst"],
+  sniper:["long","burst","stealth"],
+  short_long:["short","long","mobility","burst"],
+  support:["support","control","area"],
+  defensive:["defense","tank","control","long"],
+  area:["area","control","burst"],
+  stealth:["stealth","mobility","burst","control"],
+  mobility:["mobility","rush","short"],
+  spammer:["spam","mid","area"],
+  overpowered:["burst","area","spam","mobility"],
+  casual:["mid","reliable"],
+  hybrid_rush:["rush","mobility","burst","long"],
+  hybrid_tank:["tank","burst","defense","area"],
+  hybrid_control:["control","area","burst","support"],
+  hybrid_stealth:["stealth","rush","mobility","burst"],
+  hybrid_sniper:["long","support","control","burst"],
+  hybrid_spam:["spam","area","control","burst"],
+  hybrid_mobility:["mobility","rush","short","burst"],
+  hybrid_defense:["defense","tank","long","control"],
+  hybrid_heavy:["area","burst","short","tank"],
+  hybrid_assault:["mid","burst","spam","mobility"],
+  hybrid_pusher:["pusher","area","control","rush"],
+  hybrid_meta:["burst","spam","area","mobility"],
+  hybrid_teamrush:["support","rush","mobility","control"],
+  hybrid_allrounder:["mid","burst","mobility","control"]
+ }[style]||["mid","reliable"];
