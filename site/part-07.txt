@@ -32,7 +32,7 @@ async function loadFullWeaponDatabase(){
     return [...new Set(titles.filter(w=>!/^Category:|\\(PGW\\)| Up[123] \\(PGW\\)$/.test(w)))];
   };
   const parseLevel=txt=>{
-    let m=txt.match(/(\\d+)\\s*\\(For unlocking(?: it)? in the Armory\\)/i);
+    let m=txt.match(/(\d+)\s*\(For unlocking(?: it)? in the Armory\)/i);
     if(m)return Number(m[1]);
     m=txt.match(/\\|\\s*Level Required\\s*=\\s*[^\\n|]*?(\\d+)/i);
     return m?Number(m[1]):null;
