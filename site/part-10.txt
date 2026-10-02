@@ -1,0 +1,10 @@
+ btn=event.target.closest("button[data-missing-gun]");
+ if(!btn)return;
+ event.preventDefault();event.stopPropagation();
+ const name=btn.getAttribute("data-missing-gun");
+ if(typeof window.markMissingGun==="function") window.markMissingGun(name);
+ btn.textContent="Added to missing-gun list";btn.disabled=true;
+});
+</script>
+</body>
+</html>
