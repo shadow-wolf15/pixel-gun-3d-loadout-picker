@@ -1,0 +1,50 @@
+="checkbox"><span>Include event / seasonal guns (off by default)</span></label>
+<label class="title">Playstyle</label><select id="style">
+<option value="balanced">Balanced</option>
+<option value="aggressive">Aggressive / Rush</option>
+<option value="pusher">Pusher / Push Hard</option>
+<option value="rusher">Rusher / Close Range</option>
+<option value="sniper">Sniper / Long Range</option>
+<option value="short_long">Mid Range</option>
+<option value="hybrid_rush">Rush + Range</option>
+<option value="hybrid_tank">Tank + Damage</option>
+<option value="hybrid_control">Control + Damage</option>
+<option value="hybrid_stealth">Stealth + Rush</option>
+<option value="hybrid_sniper">Sniper + Support</option>
+<option value="hybrid_spam">Spammer + Area Control</option>
+<option value="hybrid_mobility">Mobility + Rush</option>
+<option value="hybrid_defense">Defense + Long Range</option>
+<option value="hybrid_heavy">Heavy + Close Range</option>
+<option value="hybrid_assault">Assault + Mid Range</option>
+<option value="hybrid_pusher">Pusher + Area Control</option>
+<option value="hybrid_meta">Overpowered + Spammer</option>
+<option value="hybrid_teamrush">Team + Rush</option>
+<option value="hybrid_allrounder">All-Rounder Mix</option>
+<option value="support">Support / Team</option>
+<option value="defensive">Defensive / Hold Position</option>
+<option value="area">Area Control / Splash</option>
+<option value="stealth">Stealth / Ambush</option>
+<option value="mobility">Mobility / Fast Movement</option>
+<option value="spammer">Spammer / High Fire Rate</option>
+<option value="overpowered">Overpowered / Meta</option>
+<option value="casual">Casual / Easy</option>
+</select>
+<button class="primary" id="build">⚡ Build my loadout</button>
+<label class="title">Select your own guns</label>
+<div class="sub" style="margin-bottom:8px">Normal Armory weapons are automatically treated as owned. Use this list only to mark the <strong>event / seasonal / special-route weapons</strong> you actually own.</div>
+<div class="inventory" id="inventory"></div>
+<div class="legend">Recommendations are based on the weapon list built into this demo and may not reflect the latest game balance.</div>
+</aside>
+
+<main class="panel results">
+<div class="resultbar"><h2>Loadout Builder recommendation</h2><div class="status" id="status">READY</div></div>
+<div id="output" class="empty"><strong>Ready when you are.</strong>Select your weapons and build a loadout.</div>
+</main>
+</div>
+</div>
+
+<script>
+const db={
+Primary:["Automatic Peacemaker","Ultimatum","Stormtrooper Exoskeleton","Ice Chaser","Neutron Pulsator","Last Squeak","Golden Friend"],
+Backup:["Laser Cycler","Exterminator","Dual Anger","Thunderer","Echo Scanner","Pulling Sucker Gun","Acid Pistol","Adamant Revolver","AI Pistol","Airblade Spell","Alien Blaster","Alien Gun","Amazon's Sharp Ring","Anniversary Alien Blaster","Antique Pistol","Anvil Pistol","Artefact","Battle Grainthrowers","Bell Revolver","Big BANG! Revolver","Blacklight Pistol","Blood Rite","Bloody Mercenary","Blooming Lotus","Candy Revolver","Canyon Ghost","Champion Mercenary","Combat Candy Machine","Corpuscular Revolver","Corrupted Exterminator","Cracker Gun","Cunning Flame","Cursed Ruby Musket","Cyber Gun","Cyber Revolver","Dangerous Pistol","Dead Anarchist Pistol","Dead Star","Deadly Beamer","Deadly Knowledge","Deadly Reflection","Deadly Stings","Deadly Tent","Deathbringer","Desert Eagle","Disturbing Balloons","Double PixelGun","Dragon's Heart","Dual Beam","Dual Cryo Pistols","Dual Hawks","Dual Hunter Crossbows","Dual Laser Blasters","Dual Machine Guns","Dual Revolvers","Duck Hunter","Electro-Blast Pistol","Emperor's Servants","Eternal Light","Executioner","Explosive Lemonade","Extracting Ray Pistol","Fair Judge","Fake Pistol","Fan's Revolver","Fast Death","Fear and Despair","Fierce Pack","Flaming Fury","Flash Drive","Flower Power","Frosty Fangs","Frozen Heartbeat","Galahad","Gangsta Shield","Gifted Revolvers","Gilded Gaze","Glitching Hole","Godfather's Assistant","Golden Eagles","Goo Substance Pistol","Handheld Assassin","Handy Darts","Harpy","Headhunter Pistols","Hitman Exoskeleton","Hitman Pistol","Hocus Pocus","Holographic Cards","Hot Greetings","Hot Plasma Pistol","Hounds RX03","Hunting Signs","Hypersound Uzi","Hypno-hunter","Ice Cream Pistol","Ice Wyvern Horns","Infiltrator","Irradiated SMG","Killing Mechanism","Knife and Compass","Lagoon Light","Lamp Revolver","Laser Revolver","Likes Absorber","Lives Harvester","Love Spell","Lovebirds","LumiShell","Main Controller","Mayor's Trophy Revolver","Mercenary","Midnight Kiss","Minigun Pistol","Money Rain","Monster Blaster","Mountain Wolf","Mr. Deejay","Multitaskers","Mystic Potion","Navigation Shotgun","Neon Colt 1911","Neon Fighter","Nets Thrower","New Year Defender","New-Well Pistol","Nuclear Revolver","Obsidian Dart","Old Comrade","Old Revolver","Orbital Pistol","Ouroboros","Paintball Pistol","Pasta Grater","Path Lighter","Pawn's Gun","Peppermint Guardians","Pew Blaster","PG3D-Platformer","PGA-02 Gates","Photon Pistol","Piercer","Pitbull","Pixel Gun","Pixeletta Guns","Pixelgun","Pizza Heater","Plasma Pistol","Plasma Releaser","Playing Pistols","Powered Gears","Project 'Rapid Flock'","Propitiator","Punching Mushroom","Pursuer X3","Reaper","Rebel","Reckoning Day Pistols","Red Twins","Reversed Pistol","Ritual Revolvers","Rivet Gun","Royal Revolver","Rudolf The Reindeer","Rune Stone","Rusted Revolver","Sand Tower Pistol","Sawed-off Shotguns","Sharp Puck","Shotgun Pistol","Silent Fang","Sledge Hammer","Sneaky Pistol","Snow Blaster","Space Blaster","Sparkling Horn","Sparkly Blaster","Spec Ops Pistol","Special Agent","Spender","Spirit Exorcist","Spruce Pistol","Star Shard","Steam Revolver","Super Pixel Gun","Supply Airdrop","Symbiotic Pistol","Tactical Pistol","Tamagotchi Revolver","Tanegashima","The Friendliest Pistol","The Sorting Pistol","Tick-Tock Pistol","Tide Bracers","Tiny Resizer","Tooth of Fate","Total Dominator 2","Tremor Vox","Trick and Treat","Tricky Electrizer","Triple Musket","Tunnel Riveter","Turbo Pistols","Twin Soakers","Venus & Mercury","Virtual Concert","Void Energy Pistol","VR Blasters","Waning Moon","Want Some Ice Cream?","Water Blades","Water Pistol","Werewolf","Winged Revolver","Zombie Slayer"],
+Melee:["Dark Force Saber","Jet Tenderizer","Chainsaw","Ninja Swordpath","Heroic Epee","Percival & Lamia","Adamant Claws","Additional Biting Limb","Adventure Swords","Angry Pumpkin","Armored Cuber Power","Aspen Spear","Assassin's Daggers","Backstabbers","Ban Hammer","Battle Shovel","Beetles Wand","Berserk Exoskeleton","Blade of Justice","Block Eye","Blood Glass","Bloodlash","Bloody Terror Axe","Blot Axe","Bone Crusher","Bone Knife","Bone'o'Saur Sword","Bouquet","Brave Lion","Bug Catcher's Net","Bunny Smasher","Candy Axe","Candy Baton","Carrot Sword","Chainsaw Dog","Chainsaw Sword","Chip Sword","Chipping Whip","Christmas Sword","Clown Chainsaw","Coatl Whip","Combat Knife","Combat Yo-Yo","Complete Grinder","Cop's Club","Core Sword","Corsair's Claw","Cthulhu Legacy","Cyber Sai","Danger Bouquet","Demon Sword","Devil's Lament","Disconnector","DiStreets' Deck","Double Cashback","Dual Machete","Elder Force Saber","Electrosphere","Ember Gut","Evil Pig Hammer","Fairy's Poleaxe","Fire Demon","Fire Orb","Fist of Fate","Flaming Fan","Foam Sword","FPS Destroyer","Galactic Crusher","Geri & Freki","Glaciers Destroyer","Gold Fever","Goo Substance Scythe","Good & Evil","Happy Tree Slayer","Healing Staff","Heavy Anchor","Heavy Steamers","Hockey Stick","Holog
