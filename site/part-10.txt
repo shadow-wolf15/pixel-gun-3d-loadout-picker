@@ -36,10 +36,10 @@
     const feedback=safeJSON("loadoutFeedback",{});
     const wanted=styleTags[style]||styleTags.balanced,chosen=new Set(),load={};
     cats.forEach(function(cat){
-      const pool=[...new Set(Array.isArray(window.db?.[cat])?window.db[cat]:[])].filter(function(n){return n&&!missing.has(n)});
+      const pool=[...new Set(Array.isArray(db?.[cat])?db[cat]:[])].filter(function(n){return n&&!missing.has(n)});
       if(!pool.length){load[cat]="No "+cat+" weapons found";return;}
       const scored=pool.map(function(name){
-        const tags=window.tags?.[name]||infer(cat,name);
+        const tags=tags?.[name]||infer(cat,name);
         let score=(feedback[name]||0)*3+new Set(tags).size*1.2;
         score+=tags.reduce(function(n,t){return n+(wanted.includes(t)?8:0)},0);
         score+=tags.reduce(function(n,t){return n+((roleWords[cat]||[]).includes(t)?2:0)},0);
@@ -47,7 +47,7 @@
         if(mode==="Point Capture"&&(tags.includes("area")||tags.includes("control")))score+=5;
         if(mode==="Team Fight"&&(tags.includes("support")||tags.includes("control")))score+=4;
         if(mode==="Deathmatch"&&(tags.includes("burst")||tags.includes("mobility")))score+=4;
-        const meta=window.weaponUnlockData?.[name];
+        const meta=weaponUnlockData?.[name];
         if(meta&&Number.isInteger(meta.unlockLevel)){if(meta.unlockLevel<=level)score+=2;else score-=Math.min(8,(meta.unlockLevel-level)*0.15)}else score+=1;
         if(chosen.has(name))score-=10000;
         return {name:name,score:score,tags:tags};
@@ -65,7 +65,7 @@
     if(typeof window.renderMissingGunList==="function")window.renderMissingGunList();
     if(status)status.textContent="GENERATED";
     const levelStatus=document.getElementById("levelStatus");
-    if(levelStatus)levelStatus.textContent="Generated from "+cats.reduce(function(n,c){return n+(window.db?.[c]?.length||0)},0)+" loaded weapon entries across all six categories. Missing guns are excluded.";
+    if(levelStatus)levelStatus.textContent="Generated from "+cats.reduce(function(n,c){return n+(db?.[c]?.length||0)},0)+" loaded weapon entries across all six categories. Missing guns are excluded.";
   };
   document.addEventListener("click",function(e){
     const rate=e.target.closest("button[data-rate-build]");
