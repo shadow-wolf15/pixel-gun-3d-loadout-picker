@@ -29,7 +29,7 @@ async function loadFullWeaponDatabase(){
       const j=await r.json();titles.push(...(j.query?.categorymembers||[]).map(x=>x.title).filter(Boolean));
       cmcontinue=j.continue?.cmcontinue||"";
     }while(cmcontinue);
-    return [...new Set(titles.filter(w=>!/^Category:|\\(PGW\\)| Up[123] \\(PGW\\)$/.test(w)))];
+    return [...new Set(titles.filter(w=>!/^Category:|\(PGW\)| Up[123] \(PGW\)$/.test(w)))];
   };
   const parseLevel=txt=>{
     let m=txt.match(/(\d+)\s*\(For unlocking(?: it)? in the Armory\)/i);
@@ -59,7 +59,7 @@ async function loadFullWeaponDatabase(){
         const fireRate=parseNumber(txt,"Fire Rate");
         const capacity=parseNumber(txt,"Capacity");
         const mobility=parseNumber(txt,"Mobility");
-        const attrs=(txt.match(/(?:Attribute Information|Attributes)[\\s\\S]{0,1800}/i)||[""])[0];
+        const attrs=(txt.match(/(?:Attribute Information|Attributes)[\s\S]{0,1800}/i)||[""])[0];
         weaponUnlockData[p.title]={unlockLevel:Number.isInteger(level)?level:null,source:"Pixel Gun 3D Wiki weapon page",acquisition:Number.isInteger(level)?"Verified Armory requirement":"No Armory level verified"};
         weaponStats[p.title]={damage,fireRate,capacity,mobility,rarity:(txt.match(/\\|\\s*Grade\\s*=\\s*([^\\n|]+)/i)||[])[1]||"",attrs};
       }
