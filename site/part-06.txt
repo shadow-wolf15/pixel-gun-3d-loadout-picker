@@ -1,0 +1,40 @@
+Factory","Shard Recomposer","Sharkado","Ships Drowner","Shrimposaur","Siege Mode Gauntlet","Silver Omen","Sly Avenger","Sock Bomber","Soda + Pop","Solar Flare","Soul Thief","Soulstone","Space Disinfector","Spark Shark","Spicy Crab Roll","Spiky Limbs","Spiky Mortar","Spirit Mask","Spirits Vessel","Spirits Whisper","Stained Glass Protector","Storm of All Seas","Streaming Beast","Submarine Drone Station","Super Simple-Dimple","Suppressor Grid","Synthfire","System 'Scorpion'","Temple Guardian","Ten O'clock Postman","Thunder Formula","Tomianom","Torpedo Launcher","Total Planner","Underwater Overseer","Uranium Grenade Launcher","VX-9 Linehold","War Horse","Warden's Trident","X-mas Spirits Defender","Yeti Spirit"];
+// Heavy weapons without a verified native Armory progression level are treated as event/special-route weapons.
+const heavyProgressionNames = new Set(Object.keys(heavyArmoryProgressionUpdates));
+for (const name of db.Heavy || []) {
+  if (!heavyProgressionNames.has(name)) {
+    heavySpecialEventWeapons.push(name);
+  }
+}
+
+for (const name of heavySpecialEventWeapons) {
+  weaponUnlockData[name] = {unlockLevel:2, source:"Event / Lottery / Pixel Pass / Set / Clan", acquisition:"Special route; available from multiplayer unlock (level 2+); stats may scale with profile level or require later upgrades"};
+  eventWeapons.add(name);
+}
+
+
+for (const name of Object.values(db).flat()) {
+  if (!weaponUnlockData[name]) weaponUnlockData[name] = {unlockLevel:null, source:"unknown", acquisition:"Unknown / special route"};
+}
+const preferences={
+short_long:{Primary:["Ultimatum","Neutron Pulsator","Automatic Peacemaker"],Backup:["Laser Cycler","Thunderer","Exterminator"],Melee:["Dark Force Saber","Heroic Epee"],Special:["Reflector","Necklace of the Ice King"],Sniper:["Anti-Champion Rifle","Third Eye","One Shot"],Heavy:["Destruction System","Solar Flare"]},
+spammer:{Primary:["Neutron Pulsator","Automatic Peacemaker","Last Squeak"],Backup:["Laser Cycler","Dual Anger","Thunderer"],Melee:["Dark Force Saber","Jet Tenderizer"],Special:["Reflector","Poison Darts","Necklace of the Ice King"],Sniper:["Portal Rifle","Third Eye"],Heavy:["Destruction System","Cthulhu Legacy"]},
+overpowered:{Primary:["Ultimatum","Neutron Pulsator","Stormtrooper Exoskeleton"],Backup:["Laser Cycler","Thunderer","Exterminator"],Melee:["Dark Force Saber","Jet Tenderizer","Heroic Epee"],Special:["Necklace of the Ice King","Reflector"],Sniper:["Anti-Champion Rifle","Third Eye","One Shot"],Heavy:["Destruction System","Solar Flare","Christmas Ultimatum"]},
+pusher:{Primary:["Ultimatum","Automatic Peacemaker","Stormtrooper Exoskeleton"],Backup:["Laser Cycler","Thunderer"],Melee:["Jet Tenderizer","Dark Force Saber"],Special:["Necklace of the Ice King","Reflector"],Sniper:["One Shot","Anti-Champion Rifle"],Heavy:["Christmas Ultimatum","Destruction System"]},
+rusher:{Primary:["Automatic Peacemaker","Ultimatum","Last Squeak"],Backup:["Thunderer","Dual Anger","Laser Cycler"],Melee:["Jet Tenderizer","Chainsaw","Dark Force Saber"],Special:["Necklace of the Ice King","Reflector"],Sniper:["One Shot","Portal Rifle"],Heavy:["Christmas Ultimatum","Destruction System"]},
+defensive:{Primary:["Neutron Pulsator","Ice Chaser"],Backup:["Exterminator","Laser Cycler"],Melee:["Heroic Epee","Dark Force Saber"],Special:["Reflector","Disruptive Howitzer"],Sniper:["Anti-Champion Rifle","Third Eye"],Heavy:["Solar Flare","Destruction System"]},
+area:{Primary:["Neutron Pulsator","Ice Chaser"],Backup:["Laser Cycler"],Melee:["Dark Force Saber","Heroic Epee"],Special:["Disruptive Howitzer","Necklace of the Ice King","Reflector"],Sniper:["Harsh Punisher","Third Eye"],Heavy:["Destruction System","Solar Flare","Cthulhu Legacy"]},
+stealth:{Primary:["Last Squeak","Ice Chaser"],Backup:["Thunderer","Pulling Sucker Gun"],Melee:["Ninja Swordpath","Dark Force Saber"],Special:["Poison Darts","Reflector"],Sniper:["One Shot","Portal Rifle"],Heavy:["Easter Bazooka","Destruction System"]},
+mobility:{Primary:["Stormtrooper Exoskeleton","Automatic Peacemaker"],Backup:["Laser Cycler","Thunderer"],Melee:["Jet Tenderizer","Ninja Swordpath"],Special:["Necklace of the Ice King","Reflector"],Sniper:["Portal Rifle","One Shot"],Heavy:["Solar Flare","Christmas Ultimatum"]},
+aggressive:{Primary:["Ultimatum","Automatic Peacemaker","Stormtrooper Exoskeleton"],Backup:["Thunderer","Laser Cycler"],Melee:["Jet Tenderizer","Dark Force Saber"],Special:["Necklace of the Ice King","Reflector"],Sniper:["Anti-Champion Rifle","One Shot"],Heavy:["Christmas Ultimatum","Destruction System"]},
+sniper:{Primary:["Neutron Pulsator","Automatic Peacemaker"],Backup:["Exterminator","Laser Cycler"],Melee:["Ninja Swordpath","Heroic Epee"],Special:["Reflector","Necklace of the Ice King"],Sniper:["Anti-Champion Rifle","Third Eye","Deadman's Rifle"],Heavy:["Solar Flare","Destruction System"]},
+support:{Primary:["Neutron Pulsator","Ice Chaser"],Backup:["Echo Scanner","Laser Cycler"],Melee:["Heroic Epee","Dark Force Saber"],Special:["Reflector","Poison Darts"],Sniper:["Third Eye","Portal Rifle"],Heavy:["Destruction System","Solar Flare"]},
+casual:{Primary:["Golden Friend","Ice Chaser"],Backup:["Laser Cycler","Thunderer"],Melee:["Heroic Epee","Chainsaw"],Special:["Reflector","Poison Darts"],Sniper:["Portal Rifle","One Shot"],Heavy:["Destruction System","Easter Bazooka"]},
+hybrid_rush:{Primary:["Ultimatum","Automatic Peacemaker","Golden Friend"],Backup:["Laser Cycler","Thunderer","Dual Anger"],Melee:["Jet Tenderizer","Dark Force Saber"],Special:["Vertical Grip Device","Reflector"],Sniper:["Portal Rifle","Third Eye"],Heavy:["Destruction System","Christmas Ultimatum"]},
+hybrid_tank:{Primary:["Stormtrooper Exoskeleton","Ice Chaser","Neutron Pulsator"],Backup:["Thunderer","Pulling Sucker Gun"],Melee:["Jet Tenderizer","Chainsaw"],Special:["Reflector","Disruptive Howitzer"],Sniper:["Harsh Punisher","Anti-Champion Rifle"],Heavy:["Destruction System","Cthulhu Legacy"]},
+hybrid_control:{Primary:["Neutron Pulsator","Last Squeak","Ice Chaser"],Backup:["Echo Scanner","Laser Cycler"],Melee:["Dark Force Saber","Heroic Epee"],Special:["Disruptive Howitzer","Necklace of the Ice King"],Sniper:["Third Eye","Portal Rifle"],Heavy:["Solar Flare","Cthulhu Legacy"]},
+hybrid_stealth:{Primary:["Golden Friend","Ice Chaser","Automatic Peacemaker"],Backup:["Echo Scanner","Laser Cycler"],Melee:["Ninja Swordpath","Dark Force Saber"],Special:["Poison Darts","Reflector"],Sniper:["Portal Rifle","Deadman's Rifle"],Heavy:["Easter Bazooka","Solar Flare"]},
+hybrid_sniper:{Primary:["Neutron Pulsator","Automatic Peacemaker"],Backup:["Echo Scanner","Exterminator"],Melee:["Heroic Epee","Dark Force Saber"],Special:["Necklace of the Ice King","Reflector"],Sniper:["Anti-Champion Rifle","Third Eye","Harsh Punisher"],Heavy:["Destruction System","Solar Flare"]},
+hybrid_spam:{Primary:["Last Squeak","Neutron Pulsator","Automatic Peacemaker"],Backup:["Laser Cycler","Dual Anger"],Melee:["Chainsaw","Jet Tenderizer"],Special:["Disruptive Howitzer","Poison Darts"],Sniper:["Portal Rifle","Third Eye"],Heavy:["Solar Flare","Easter Bazooka"]},
+hybrid_mobility:{Primary:["Ice Chaser","Automatic Peacemaker","Stormtrooper Exoskeleton"],Backup:["Laser Cycler","Echo Scanner"],Melee:["Jet Tenderizer","Ninja Swordpath"],Special:["Vertical Grip Device","Reflector"],Sniper:["Portal Rifle","One Shot"],Heavy:["Destruction System","Easter Bazooka"]},
+hybrid_defense:{Primary:["Stormtrooper Exoskeleton","Neutron Pulsator"],Backup:["Exterminator","Thunderer"],Melee:["Dark Force S
