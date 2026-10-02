@@ -53,7 +53,7 @@ function build(){
  const knownLevels=Object.values(uniqueMeta).filter(x=>Number.isInteger(x.unlockLevel)).length;
  const unknownCount=Object.values(uniqueMeta).filter(x=>!Number.isInteger(x.unlockLevel)).length;
  const levelStatus=document.getElementById("levelStatus");
- if(levelStatus) levelStatus.textContent=`Level ${level}: ${knownLevels} verified unlock records. ${knownLocked} known weapon(s) are above your level. ${unknownCount} weapon(s) have no verified level and are not guessed. Event/special weapons you own can be marked below.`;
+ if(levelStatus) levelStatus.textContent=`Level ${level}: ${knownLevels} verified unlock records. ${knownLocked} known weapon(s) are above your level. ${unknownCount} weapon(s) have no verified level and are INCLUDED in the loadout picker. Unknown-level weapons are not blocked by your level; event/special weapons still require ownership.`;
  renderInventory();
  const load={}; const chosen=[]; Object.keys(db).forEach(c=>{ load[c]=pick(c,own,pref,chosen); if(!load[c].startsWith("No owned ")) chosen.push(load[c]); });
  const pet=style==="aggressive"?"Dragon":style==="pusher"?"Dragon":style==="rusher"?"Werewolf":style==="short_long"?"Phoenix":style==="spammer"?"Mech Dino":style==="overpowered"?"Dragon":style.startsWith("hybrid_")?"Phoenix":
