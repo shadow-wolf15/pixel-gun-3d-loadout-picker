@@ -11,31 +11,81 @@ const pets=["Cyber Cat","Robo Dog","Dragon","Phoenix","Mech Dino","Alien Cat","W
 const inv=document.getElementById("inventory");
 let databaseLoaded=false;
 const wikiCategoryMap={Primary:"Primary",Backup:"Backup",Melee:"Melee",Special:"Special",Sniper:"Sniper",Heavy:"Heavy"};
+const weaponStats=window.weaponStats||{}; window.weaponStats=weaponStats;
 async function loadFullWeaponDatabase(){
+  const cats=["Primary","Backup","Melee","Special","Sniper","Heavy"];
   const next={Primary:[],Backup:[],Melee:[],Special:[],Sniper:[],Heavy:[]};
-  const api=async(cat)=>{
-    const url=`https://pg3d.wiki.gg/api.php?action=query&list=categorymembers&cmtitle=${encodeURIComponent("Category:"+wikiCategoryMap[cat])}&cmlimit=500&cmnamespace=0&format=json&origin=*`;
-    const r=await fetch(url,{cache:"no-store"});
-    if(!r.ok) throw new Error("wiki request failed");
-    const j=await r.json();
-    return (j.query?.categorymembers||[]).map(x=>x.title).filter(Boolean);
+  const status=document.getElementById("levelStatus");
+  const setStatus=t=>{if(status)status.textContent=t};
+  const fetchCategory=async(cat)=>{
+    let titles=[],cmcontinue="";
+    do{
+      const u=new URL("https://pg3d.wiki.gg/api.php");
+      u.searchParams.set("action","query");u.searchParams.set("list","categorymembers");
+      u.searchParams.set("cmtitle","Category:"+wikiCategoryMap[cat]);u.searchParams.set("cmlimit","500");
+      u.searchParams.set("cmnamespace","0");u.searchParams.set("format","json");u.searchParams.set("origin","*");
+      if(cmcontinue)u.searchParams.set("cmcontinue",cmcontinue);
+      const r=await fetch(u.toString(),{cache:"no-store"});if(!r.ok)throw new Error("category request failed");
+      const j=await r.json();titles.push(...(j.query?.categorymembers||[]).map(x=>x.title).filter(Boolean));
+      cmcontinue=j.continue?.cmcontinue||"";
+    }while(cmcontinue);
+    return [...new Set(titles.filter(w=>!/^Category:|\\(PGW\\)| Up[123] \\(PGW\\)$/.test(w)))];
+  };
+  const parseLevel=txt=>{
+    let m=txt.match(/(\\d+)\\s*\\(For unlocking(?: it)? in the Armory\\)/i);
+    if(m)return Number(m[1]);
+    m=txt.match(/\\|\\s*Level Required\\s*=\\s*[^\\n|]*?(\\d+)/i);
+    return m?Number(m[1]):null;
+  };
+  const parseNumber=(txt,label)=>{
+    const m=txt.match(new RegExp("\\|\\\\s*"+label+"\\\\s*=\\\\s*[^\\n|]*?(\\\\d+(?:\\\\.\\\\d+)?)","i"));
+    return m?Number(m[1]):null;
+  };
+  const enrich=async(names)=>{
+    for(let i=0;i<names.length;i+=50){
+      const batch=names.slice(i,i+50);
+      const u=new URL("https://pg3d.wiki.gg/api.php");
+      u.searchParams.set("action","query");u.searchParams.set("prop","revisions");
+      u.searchParams.set("rvprop","content");u.searchParams.set("rvslots","main");
+      u.searchParams.set("titles",batch.join("|"));u.searchParams.set("format","json");
+      u.searchParams.set("formatversion","2");u.searchParams.set("origin","*");
+      const r=await fetch(u.toString(),{cache:"no-store"});if(!r.ok)throw new Error("weapon metadata request failed");
+      const j=await r.json();
+      for(const p of (j.query?.pages||[])){
+        const txt=typeof p.revisions?.[0]?.slots?.main?.content==="string"?p.revisions[0].slots.main.content:"";
+        if(!p.title)continue;
+        const level=parseLevel(txt);
+        const damage=parseNumber(txt,"Base Damage");
+        const fireRate=parseNumber(txt,"Fire Rate");
+        const capacity=parseNumber(txt,"Capacity");
+        const mobility=parseNumber(txt,"Mobility");
+        const attrs=(txt.match(/(?:Attribute Information|Attributes)[\\s\\S]{0,1800}/i)||[""])[0];
+        weaponUnlockData[p.title]={unlockLevel:Number.isInteger(level)?level:null,source:"Pixel Gun 3D Wiki weapon page",acquisition:Number.isInteger(level)?"Verified Armory requirement":"No Armory level verified"};
+        weaponStats[p.title]={damage,fireRate,capacity,mobility,rarity:(txt.match(/\\|\\s*Grade\\s*=\\s*([^\\n|]+)/i)||[])[1]||"",attrs};
+      }
+      setStatus("Reading verified weapon levels and stats: "+Math.min(i+50,names.length)+"/"+names.length+"...");
+    }
   };
   try{
-    const results=await Promise.all(Object.keys(next).map(api));
-    Object.keys(next).forEach((cat,i)=>{
-      next[cat]=[...new Set(results[i].filter(w=>!/^Category:|\(PGW\)| Up[123] \(PGW\)$/.test(w)))];
-    });
+    setStatus("Loading every weapon category from the Pixel Gun 3D Wiki...");
+    const results=await Promise.all(cats.map(fetchCategory));
+    cats.forEach((cat,i)=>next[cat]=results[i]);
+    const all=[...new Set(Object.values(next).flat())];
     Object.keys(next).forEach(cat=>{db[cat]=[...new Set([...next[cat],...(db[cat]||[])])];});
+    setStatus("Loaded "+all.length+" weapons. Reading level requirements...");
+    await enrich(all);
     databaseLoaded=true;
-    for(const name of Object.values(db).flat()) if(!weaponUnlockData[name]) weaponUnlockData[name]={unlockLevel:null,source:"Pixel Gun 3D Wiki category",acquisition:"Category verified; unlock level not yet verified"};
-    const status=document.getElementById("levelStatus");
-    if(status) status.textContent=`Full weapon database loaded from the Pixel Gun 3D Wiki: ${Object.values(db).reduce((n,a)=>n+a.length,0)} category entries. Normal Armory weapons are automatically owned; mark only the event/special weapons you own.`;
-  }catch(e){
-    const status=document.getElementById("levelStatus");
-    if(status) status.textContent="Full Wiki database could not be loaded right now, so the built-in weapon list is being used.";
+    Object.keys(db).forEach(cat=>db[cat].forEach(name=>{
+      if(!weaponUnlockData[name])weaponUnlockData[name]={unlockLevel:null,source:"Pixel Gun 3D Wiki",acquisition:"Level unverified"};
+    }));
+    setStatus("Verified level data loaded for "+Object.values(weaponUnlockData).filter(x=>Number.isInteger(x.unlockLevel)).length+" weapons; "+all.length+" total weapon pages checked.");
+  }catch(err){
+    console.error("Full weapon database load failed",err);
+    setStatus("Wiki level/stat sync failed; built-in data remains available. Refresh to retry.");
   }
-  renderInventory();
+  if(typeof window.renderInventory==="function")window.renderInventory();else renderInventory();
 }
+
 function renderInventory(){
   if(!inv) return;
   const selected=new Set([...inv.querySelectorAll("input:checked")].map(x=>x.value));
