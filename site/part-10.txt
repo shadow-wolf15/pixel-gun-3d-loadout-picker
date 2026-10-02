@@ -73,5 +73,90 @@
   },true);
 })();
 </script>
+
+<script id="typedWeaponInventory">
+(function(){
+  const KEY="typedOwnedGuns";
+  function get(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}}
+  function save(a){localStorage.setItem(KEY,JSON.stringify([...new Set(a)]))}
+  function allWeapons(){
+    return Object.entries(db||{}).flatMap(function(pair){return pair[1].map(function(name){return {name:name,category:pair[0]}})});
+  }
+  function refresh(){
+    const inv=document.getElementById("inventory"), old=document.getElementById("typedWeaponBox");
+    if(!inv)return;
+    if(old)old.remove();
+    const box=document.createElement("div");box.id="typedWeaponBox";box.className="custom";
+    box.innerHTML='<div style="display:flex;gap:8px"><input id="weaponSearch" type="search" placeholder="Type a gun you own..." autocomplete="off"><button type="button" id="addWeapon" class="primary" style="width:auto;margin:0;padding:10px 14px">Add</button></div><div id="weaponSuggestions" style="position:relative"></div><div id="ownedWeapons" style="margin-top:10px"></div>';
+    inv.parentNode.insertBefore(box,inv);
+    const input=box.querySelector("#weaponSearch"),suggest=box.querySelector("#weaponSuggestions"),list=box.querySelector("#ownedWeapons");
+    function draw(){
+      const owned=get();
+      list.innerHTML=owned.length?owned.map(function(n){return '<span style="display:inline-flex;align-items:center;gap:5px;margin:3px;padding:5px 8px;border:1px solid #252e43;border-radius:999px;background:#111827;font-size:11px">'+String(n).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})+' <button type="button" data-remove="'+String(n).replace(/"/g,"&quot;")+'" style="border:0;background:none;color:#ff8d8d;cursor:pointer;padding:0">×</button></span>'}).join(""):'<div class="sub" style="margin:6px 0">No guns added yet. Type the guns you own above.</div>';
+    }
+    function suggestions(){
+      const q=input.value.trim().toLowerCase();suggest.innerHTML="";
+      if(!q)return;
+      const matches=allWeapons().filter(function(x){return x.name.toLowerCase().includes(q)}).filter(function(x){return !get().includes(x.name)}).slice(0,8);
+      if(!matches.length)return;
+      const box2=document.createElement("div");box2.style.cssText="position:absolute;z-index:20;left:0;right:65px;background:#0b111d;border:1px solid #303a52;border-radius:10px;overflow:hidden";
+      matches.forEach(function(x){const b=document.createElement("button");b.type="button";b.textContent=x.name+" — "+x.category;b.style.cssText="display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #20283a;background:#0b111d;color:#fff;padding:9px;cursor:pointer";b.onclick=function(){addName(x.name);input.value="";suggest.innerHTML=""};box2.appendChild(b)});
+      suggest.appendChild(box2);
+    }
+    function addName(name){
+      const found=allWeapons().find(function(x){return x.name.toLowerCase()===String(name).trim().toLowerCase()});
+      if(!found)return;
+      const a=get();if(!a.includes(found.name)){a.push(found.name);save(a);draw();renderInventory();}
+    }
+    input.addEventListener("input",suggestions);
+    input.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();const first=allWeapons().find(function(x){return x.name.toLowerCase()===input.value.trim().toLowerCase()});if(first)addName(first.name)}});
+    box.querySelector("#addWeapon").onclick=function(){const exact=allWeapons().find(function(x){return x.name.toLowerCase()===input.value.trim().toLowerCase()});if(exact){addName(exact.name);input.value="";suggest.innerHTML=""}else{input.focus()}};
+    list.addEventListener("click",function(e){const b=e.target.closest("[data-remove]");if(!b)return;save(get().filter(function(x){return x!==b.dataset.remove}));draw();renderInventory()});
+    draw();
+  }
+  const originalRender=window.renderInventory;
+  window.renderInventory=function(){
+    if(typeof originalRender==="function")originalRender();
+    const inv=document.getElementById("inventory");
+    if(inv){
+      [...inv.querySelectorAll("input[type=checkbox]")].forEach(function(cb){
+        cb.checked=get().includes(cb.value);
+        cb.addEventListener("change",function(){
+          const a=get(),i=a.indexOf(cb.value);
+          if(cb.checked&&i<0)a.push(cb.value);
+          if(!cb.checked&&i>=0)a.splice(i,1);
+          save(a);
+          const note=document.getElementById("ownedWeaponCount");if(note)note.textContent=a.length+" guns selected";
+        });
+      });
+    }
+    refresh();
+  };
+  function escape(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  window.safeBuildLoadout=function(){
+    const selected=get(),available=new Set(selected),level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1)),style=document.getElementById("style")?.value||"balanced",mode=document.getElementById("mode")?.value||"Any mode";
+    const feedback=(function(){try{return JSON.parse(localStorage.getItem("loadoutFeedback")||"{}")}catch(e){return{}}})();
+    const missing=new Set((function(){try{return JSON.parse(localStorage.getItem("loadoutMissingGuns")||"[]")}catch(e){return[]}})());
+    const cats=["Primary","Backup","Melee","Special","Sniper","Heavy"],wanted=({balanced:["mid","reliable","burst"],aggressive:["rush","short","burst"],pusher:["pusher","control","area"],rusher:["rush","short","mobility"],sniper:["long","burst"],spammer:["spam","mid","burst"],overpowered:["burst","area","spam"],support:["support","control"],defensive:["defense","tank"],area:["area","control","burst"],stealth:["stealth","mobility"],mobility:["mobility","rush"],casual:["mid","reliable"]}[style]||["mid","reliable"]);
+    function tags(cat,n){return (typeof infer==="function"?infer(cat,n):[])}
+    const load={};let total=0;
+    cats.forEach(function(cat){
+      const pool=(db[cat]||[]).filter(function(n){return available.has(n)&&!missing.has(n)});
+      total+=pool.length;
+      if(!pool.length){load[cat]="No owned "+cat+" gun";return}
+      const scored=pool.map(function(n){const t=tags(cat,n),m=weaponUnlockData[n],levelFit=!m||!Number.isInteger(m.unlockLevel)||m.unlockLevel<=level;let s=(feedback[n]||0)*3+t.length*1.2+(levelFit?3:-2);s+=t.reduce(function(v,x){return v+(wanted.includes(x)?8:0)},0);if(mode==="Point Capture"&&(t.includes("area")||t.includes("control")))s+=5;if(mode==="Deathmatch"&&(t.includes("burst")||t.includes("mobility")))s+=4;return {n:n,s:s}}).sort(function(a,b){return b.s-a.s||a.n.localeCompare(b.n)});
+      load[cat]=scored[0].n;
+    });
+    const out=document.getElementById("output"),status=document.getElementById("status");
+    if(!out)return;
+    const cards=cats.map(function(cat){return '<article class="slot"><div class="kind">'+cat+'</div><h3>'+escape(load[cat])+'</h3><p>Chosen only from the guns you entered.</p><button type="button" class="missing-btn" data-missing-gun="'+escape(load[cat])+'">I don\'t have this gun</button></article>'}).join("");
+    out.classList.remove("empty");out.classList.add("built");
+    out.innerHTML='<div class="grid">'+cards+'<article class="slot pet"><div class="kind">Pet</div><h3>Cyber Cat</h3><p>Recommended companion.</p></article><article class="slot grenade"><div class="kind">Grenade</div><h3>Cyber Grenade</h3><p>Recommended utility.</p></article></div><div class="missing-gun-list"><strong>Your typed inventory</strong><p>'+total+' usable owned weapons found across the six categories.</p><div id="missingGunList"></div></div>';
+    if(typeof renderMissingGunList==="function")renderMissingGunList();
+    if(status)status.textContent=selected.length?"GENERATED":"ADD GUNS";
+  };
+  setTimeout(function(){if(typeof window.renderInventory==="function")window.renderInventory()},0);
+})();
+</script>
 </body>
 </html>
