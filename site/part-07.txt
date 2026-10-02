@@ -122,10 +122,10 @@ function typedInventoryModeEnabled(){return localStorage.getItem("typedInventory
 function typedOwnedList(){try{return JSON.parse(localStorage.getItem("typedOwnedGuns")||"[]").filter(x=>typeof x==="string")}catch(e){return[]}}
 function owned(){
  const typed=typedOwnedList();
- if(typedInventoryModeEnabled()&&typed.length)return [...new Set(typed)];
- const markedEvents=[...inv.querySelectorAll("input:checked")].map(x=>x.value);
+ const markedEvents=[...inv.querySelectorAll("input:checked")].map(x=>x.value).filter(x=>eventWeapons.has(x));
  const automaticOwned=Object.values(db).flat().filter(w=>!eventWeapons.has(w));
- return [...new Set([...automaticOwned,...markedEvents])];
+ if(typedInventoryModeEnabled()) return [...new Set([...typed,...markedEvents])];
+ return [...new Set([...automaticOwned,...markedEvents,...typed])];
 }
 function pick(cat,own,prefs,chosen=[]){
  const feedback=JSON.parse(localStorage.getItem("loadoutFeedback")||"{}");
