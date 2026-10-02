@@ -1,5 +1,3 @@
-","mid","long"],balanced:["mid","reliable"]
- }[style]||["mid"];
  const modeWant={"Team Fight":["support","control","area"],"Deathmatch":["burst","mobility"],"Battle Royale":["long","mobility"],"Point Capture":["control","area"],"Any mode":["reliable","mid"]}[mode]||[];
  const includeEvents=document.getElementById("includeEvents")?.checked===true;
  const level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
