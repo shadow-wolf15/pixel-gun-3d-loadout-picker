@@ -44,5 +44,5 @@ button,input,select{font:inherit}.app{max-width:1180px;margin:auto;padding:26px 
 <aside class="panel controls">
 <h2>Build your profile</h2><div class="sub">The more inventory you select, the more personalized the result.</div>
 <div class="row"><div><label class="title">Level</label><input id="level" type="number" min="1" max="65" value="20"></div><div><label class="title">Mode</label><select id="mode"><option>Team Fight</option><option>Deathmatch</option><option>Battle Royale</option><option>Point Capture</option><option>Any mode</option></select></div></div>
-<div class="legend" id="levelStatus" role="status" style="margin:10px 0">Level check: weapon unlock records are being verified. Unknown/event weapons won’t be treated as owned.</div>
+<div class="legend" id="levelStatus" role="status" style="margin:10px 0">Level check: verified unlocks are level-gated. Weapons with no verified level are included in the loadout picker; only event/special-route weapons require ownership marking.</div>
 <label class="check" style="margin:8px 0"><input id="includeEvents" type
