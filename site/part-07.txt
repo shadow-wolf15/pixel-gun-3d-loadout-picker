@@ -1,0 +1,85 @@
+aber","Heroic Epee"],Special:["Reflector","Necklace of the Ice King"],Sniper:["Anti-Champion Rifle","Harsh Punisher"],Heavy:["Cthulhu Legacy","Destruction System"]},
+hybrid_heavy:{Primary:["Ultimatum","Stormtrooper Exoskeleton"],Backup:["Thunderer","Dual Anger"],Melee:["Jet Tenderizer","Chainsaw"],Special:["Disruptive Howitzer","Reflector"],Sniper:["One Shot","Anti-Champion Rifle"],Heavy:["Destruction System","Christmas Ultimatum","Bedivere & Lamorak"]},
+hybrid_assault:{Primary:["Automatic Peacemaker","Ultimatum","Golden Friend"],Backup:["Laser Cycler","Thunderer"],Melee:["Dark Force Saber","Jet Tenderizer"],Special:["Reflector","Vertical Grip Device"],Sniper:["Portal Rifle","Third Eye"],Heavy:["Solar Flare","Destruction System"]},
+hybrid_pusher:{Primary:["Ultimatum","Ice Chaser","Last Squeak"],Backup:["Pulling Sucker Gun","Laser Cycler"],Melee:["Jet Tenderizer","Chainsaw"],Special:["Disruptive Howitzer","Vertical Grip Device"],Sniper:["Portal Rifle","Third Eye"],Heavy:["Destruction System","Cthulhu Legacy"]},
+hybrid_meta:{Primary:["Ultimatum","Neutron Pulsator","Stormtrooper Exoskeleton"],Backup:["Laser Cycler","Thunderer"],Melee:["Dark Force Saber","Jet Tenderizer"],Special:["Reflector","Necklace of the Ice King"],Sniper:["Anti-Champion Rifle","Third Eye"],Heavy:["Destruction System","Solar Flare"]},
+hybrid_teamrush:{Primary:["Automatic Peacemaker","Ice Chaser","Ultimatum"],Backup:["Echo Scanner","Laser Cycler"],Melee:["Jet Tenderizer","Dark Force Saber"],Special:["Vertical Grip Device","Reflector"],Sniper:["Portal Rifle","Third Eye"],Heavy:["Destruction System","Easter Bazooka"]},
+hybrid_allrounder:{Primary:["Automatic Peacemaker","Ultimatum","Neutron Pulsator"],Backup:["Laser Cycler","Thunderer"],Melee:["Dark Force Saber","Heroic Epee"],Special:["Reflector","Vertical Grip Device"],Sniper:["Third Eye","Portal Rifle"],Heavy:["Destruction System","Solar Flare"]},
+balanced:{Primary:["Automatic Peacemaker","Neutron Pulsator","Ice Chaser"],Backup:["Laser Cycler","Thunderer"],Melee:["Heroic Epee","Dark Force Saber"],Special:["Reflector","Necklace of the Ice King"],Sniper:["Anti-Champion Rifle","Third Eye"],Heavy:["Destruction System","Solar Flare"]}
+};
+const pets=["Cyber Cat","Robo Dog","Dragon","Phoenix","Mech Dino","Alien Cat","Werewolf"], grenades=["Cyber Grenade","Poisonous Grenade","Time Machine","Cluster Grenade","Sticky Mine","Black Hole"];
+const inv=document.getElementById("inventory");
+let databaseLoaded=false;
+const wikiCategoryMap={Primary:"Primary",Backup:"Backup",Melee:"Melee",Special:"Special",Sniper:"Sniper",Heavy:"Heavy"};
+async function loadFullWeaponDatabase(){
+  const next={Primary:[],Backup:[],Melee:[],Special:[],Sniper:[],Heavy:[]};
+  const api=async(cat)=>{
+    const url=`https://pg3d.wiki.gg/api.php?action=query&list=categorymembers&cmtitle=${encodeURIComponent("Category:"+wikiCategoryMap[cat])}&cmlimit=500&cmnamespace=0&format=json&origin=*`;
+    const r=await fetch(url,{cache:"no-store"});
+    if(!r.ok) throw new Error("wiki request failed");
+    const j=await r.json();
+    return (j.query?.categorymembers||[]).map(x=>x.title).filter(Boolean);
+  };
+  try{
+    const results=await Promise.all(Object.keys(next).map(api));
+    Object.keys(next).forEach((cat,i)=>{
+      next[cat]=[...new Set(results[i].filter(w=>!/^Category:|\(PGW\)| Up[123] \(PGW\)$/.test(w)))];
+    });
+    Object.keys(next).forEach(cat=>{db[cat]=[...new Set([...next[cat],...(db[cat]||[])])];});
+    databaseLoaded=true;
+    for(const name of Object.values(db).flat()) if(!weaponUnlockData[name]) weaponUnlockData[name]={unlockLevel:null,source:"Pixel Gun 3D Wiki category",acquisition:"Category verified; unlock level not yet verified"};
+    const status=document.getElementById("levelStatus");
+    if(status) status.textContent=`Full weapon database loaded from the Pixel Gun 3D Wiki: ${Object.values(db).reduce((n,a)=>n+a.length,0)} category entries. Normal Armory weapons are automatically owned; mark only the event/special weapons you own.`;
+  }catch(e){
+    const status=document.getElementById("levelStatus");
+    if(status) status.textContent="Full Wiki database could not be loaded right now, so the built-in weapon list is being used.";
+  }
+  renderInventory();
+}
+function renderInventory(){
+  if(!inv) return;
+  const level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
+  const selected=new Set([...inv.querySelectorAll("input:checked")].map(x=>x.value));
+  inv.innerHTML="";
+  const eventList=[...new Set(Object.values(db).flat().filter(w=>eventWeapons.has(w)))].sort((a,b)=>a.localeCompare(b));
+  if(!eventList.length){
+    inv.innerHTML='<div class="sub">No event weapons are currently listed.</div>';
+    return;
+  }
+  eventList.forEach(w=>{
+    const meta=weaponUnlockData[w]||{};
+    const l=document.createElement("label");
+    l.className="check";
+    const input=document.createElement("input");
+    input.type="checkbox"; input.value=w; input.checked=selected.has(w);
+    const span=document.createElement("span");
+    span.textContent=`Event / Special — ${w} • Available from level ${meta.unlockLevel||2}+`;
+    l.append(input,span); inv.appendChild(l);
+  });
+}
+
+renderInventory();
+loadFullWeaponDatabase();
+function owned(){const markedEvents=[...inv.querySelectorAll("input:checked")].map(x=>x.value); const automaticOwned=Object.values(db).flat().filter(w=>!eventWeapons.has(w)); return [...new Set([...automaticOwned,...markedEvents])]}
+function pick(cat,own,prefs,chosen=[]){
+ const feedback=JSON.parse(localStorage.getItem("loadoutFeedback")||"{}");
+ const missing=JSON.parse(localStorage.getItem("loadoutMissingGuns")||"[]");
+ const mode=document.getElementById("mode").value;
+ const style=document.getElementById("style").value;
+ const tags={
+  "Automatic Peacemaker":["mid","spam"],"Ultimatum":["short","burst","area"],"Stormtrooper Exoskeleton":["mid","tank"],
+  "Ice Chaser":["mid","control"],"Neutron Pulsator":["mid","spam","control"],"Last Squeak":["spam","area"],"Golden Friend":["mid"],
+  "Laser Cycler":["mid","spam"],"Exterminator":["long","burst"],"Dual Anger":["short","spam"],"Thunderer":["short","burst"],
+  "Echo Scanner":["mid","support"],"Pulling Sucker Gun":["control","pusher"],"Dark Force Saber":["short","mobility"],
+  "Jet Tenderizer":["short","rush","mobility"],"Chainsaw":["short","spam"],"Ninja Swordpath":["short","stealth","mobility"],
+  "Heroic Epee":["short","mobility"],"Percival & Lamia":["short","burst"],"Reflector":["control","defense"],"Vertical Grip Device":["mobility","pusher"],
+  "Poison Darts":["stealth","control"],"Necklace of the Ice King":["control","area"],"Disruptive Howitzer":["area","control"],
+  "Cyclops Sling":["control","burst"],"Anti-Champion Rifle":["long","burst"],"Deadman's Rifle":["long","stealth"],"One Shot":["long","burst"],
+  "Third Eye":["long"],"Harsh Punisher":["long","burst"],"Portal Rifle":["long","mobility"],"Destruction System":["area","burst"],
+  "Bedivere & Lamorak":["short","tank"],"Christmas Ultimatum":["area","burst"],"Solar Flare":["area","control"],"Cthulhu Legacy":["area","tank"],"Easter Bazooka":["area","burst"]
+ };
+ const want={
+  aggressive:["rush","short","burst"],pusher:["pusher","control","area"],rusher:["rush","short","mobility"],
+  sniper:["long","burst"],support:["support","control","area"],defensive:["defense","tank"],area:["area","control"],
+  stealth:["stealth","mobility"],mobility:["mobility","rush"],spammer:["spam","mid"],overpowered:["burst","area"],
+  casual:["mid"],short_long:["short
