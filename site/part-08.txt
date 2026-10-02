@@ -45,9 +45,7 @@
  const available=db[cat].filter(x=>levelEligible(x)&&!missing.includes(x));
  const candidates=available.filter(x=>{
    const meta=weaponUnlockData[x];
-   // Weapons without a verified unlock level are always eligible for recommendations.
-   // This keeps them in the build pool even when their acquisition route is uncertain.
-   if(!meta || !Number.isInteger(meta.unlockLevel)) return true;
+   if(typedInventoryModeEnabled() && !own.includes(x)) return false;
    if(eventWeapons.has(x)) return includeEvents && own.includes(x);
    return true;
  });
