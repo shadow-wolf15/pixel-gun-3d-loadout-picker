@@ -29,12 +29,12 @@ async function loadFullWeaponDatabase(){
       const j=await r.json();titles.push(...(j.query?.categorymembers||[]).map(x=>x.title).filter(Boolean));
       cmcontinue=j.continue?.cmcontinue||"";
     }while(cmcontinue);
-    return [...new Set(titles.filter(w=>!/^Category:|\(PGW\)| Up[123] \(PGW\)$/.test(w)))];
+    return [...new Set(titles.filter(w=>!/^Category:|\\(PGW\\)| Up[123] \\(PGW\\)$/.test(w)))];
   };
   const parseLevel=txt=>{
     let m=txt.match(/(\d+)\s*\(For unlocking(?: it)? in the Armory\)/i);
     if(m)return Number(m[1]);
-    m=txt.match(/\|\s*Level Required\s*=\s*[^\n|]*?(\d+)/i);
+    m=txt.match(/\\|\\s*Level Required\\s*=\\s*[^\\n|]*?(\\d+)/i);
     return m?Number(m[1]):null;
   };
   const parseNumber=(txt,label)=>{
@@ -59,7 +59,7 @@ async function loadFullWeaponDatabase(){
         const fireRate=parseNumber(txt,"Fire Rate");
         const capacity=parseNumber(txt,"Capacity");
         const mobility=parseNumber(txt,"Mobility");
-        const attrs=(txt.match(/(?:Attribute Information|Attributes)[\s\S]{0,1800}/i)||[""])[0];
+        const attrs=(txt.match(/(?:Attribute Information|Attributes)[\\s\\S]{0,1800}/i)||[""])[0];
         weaponUnlockData[p.title]={unlockLevel:Number.isInteger(level)?level:null,source:"Pixel Gun 3D Wiki weapon page",acquisition:Number.isInteger(level)?"Verified Armory requirement":"No Armory level verified"};
         weaponStats[p.title]={damage,fireRate,capacity,mobility,rarity:(txt.match(/\\|\\s*Grade\\s*=\\s*([^\\n|]+)/i)||[])[1]||"",attrs};
       }
@@ -145,32 +145,7 @@ function pick(cat,own,prefs,chosen=[]){
   "Bedivere & Lamorak":["short","tank"],"Christmas Ultimatum":["area","burst"],"Solar Flare":["area","control"],"Cthulhu Legacy":["area","tank"],"Easter Bazooka":["area","burst"]
  };
  const want={
-  balanced:["mid","reliable"],
-  aggressive:["rush","short","burst","mobility"],
-  pusher:["pusher","control","area","rush"],
-  rusher:["rush","short","mobility","burst"],
-  sniper:["long","burst","stealth"],
-  short_long:["short","long","mobility","burst"],
-  support:["support","control","area"],
-  defensive:["defense","tank","control","long"],
-  area:["area","control","burst"],
-  stealth:["stealth","mobility","burst","control"],
-  mobility:["mobility","rush","short"],
-  spammer:["spam","mid","area"],
-  overpowered:["burst","area","spam","mobility"],
-  casual:["mid","reliable"],
-  hybrid_rush:["rush","mobility","burst","long"],
-  hybrid_tank:["tank","burst","defense","area"],
-  hybrid_control:["control","area","burst","support"],
-  hybrid_stealth:["stealth","rush","mobility","burst"],
-  hybrid_sniper:["long","support","control","burst"],
-  hybrid_spam:["spam","area","control","burst"],
-  hybrid_mobility:["mobility","rush","short","burst"],
-  hybrid_defense:["defense","tank","long","control"],
-  hybrid_heavy:["area","burst","short","tank"],
-  hybrid_assault:["mid","burst","spam","mobility"],
-  hybrid_pusher:["pusher","area","control","rush"],
-  hybrid_meta:["burst","spam","area","mobility"],
-  hybrid_teamrush:["support","rush","mobility","control"],
-  hybrid_allrounder:["mid","burst","mobility","control"]
- }[style]||["mid","reliable"];
+  aggressive:["rush","short","burst"],pusher:["pusher","control","area"],rusher:["rush","short","mobility"],
+  sniper:["long","burst"],support:["support","control","area"],defensive:["defense","tank"],area:["area","control"],
+  stealth:["stealth","mobility"],mobility:["mobility","rush"],spammer:["spam","mid"],overpowered:["burst","area"],
+  casual:["mid"],short_long:["short
