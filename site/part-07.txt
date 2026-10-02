@@ -118,7 +118,15 @@ function renderInventory(){
 
 renderInventory();
 loadFullWeaponDatabase();
-function owned(){const markedEvents=[...inv.querySelectorAll("input:checked")].map(x=>x.value); const automaticOwned=Object.values(db).flat().filter(w=>!eventWeapons.has(w)); return [...new Set([...automaticOwned,...markedEvents])]}
+function typedInventoryModeEnabled(){return localStorage.getItem("typedInventoryMode")!=="off"}
+function typedOwnedList(){try{return JSON.parse(localStorage.getItem("typedOwnedGuns")||"[]").filter(x=>typeof x==="string")}catch(e){return[]}}
+function owned(){
+ const typed=typedOwnedList();
+ if(typedInventoryModeEnabled()&&typed.length)return [...new Set(typed)];
+ const markedEvents=[...inv.querySelectorAll("input:checked")].map(x=>x.value);
+ const automaticOwned=Object.values(db).flat().filter(w=>!eventWeapons.has(w));
+ return [...new Set([...automaticOwned,...markedEvents])];
+}
 function pick(cat,own,prefs,chosen=[]){
  const feedback=JSON.parse(localStorage.getItem("loadoutFeedback")||"{}");
  const missing=JSON.parse(localStorage.getItem("loadoutMissingGuns")||"[]");
