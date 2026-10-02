@@ -93,6 +93,8 @@ function slot(kind,name,text,extra=""){
  return `<article class="slot ${extra}"><div class="kind">${kind}</div><h3>${name}</h3><p>${text}</p>${action}</article>`;
 }
 function build(){
+ const buildNo=Number(localStorage.getItem("loadoutBuildNumber")||0)+1;
+ localStorage.setItem("loadoutBuildNumber",String(buildNo));
  const level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1)),style=document.getElementById("style")?.value||"balanced",mode=document.getElementById("mode")?.value||"Any mode",own=owned(),pref=preferences[style]||{};
  const uniqueMeta=Object.fromEntries(Object.keys(weaponUnlockData).map(k=>[k,weaponUnlockData[k]]));
  const knownLocked=Object.values(uniqueMeta).filter(x=>Number.isInteger(x.unlockLevel)&&x.unlockLevel>level).length;
