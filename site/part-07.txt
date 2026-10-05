@@ -103,7 +103,11 @@ function renderInventory(){
     l.className="check";
     const input=document.createElement("input");
     input.type="checkbox"; input.value=w;
-    input.checked=isEvent ? selected.has(w) : true;
+    const currentLevel=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
+    const unlockLevel=Number.isInteger((weaponUnlockData[w]||{}).unlockLevel)?weaponUnlockData[w].unlockLevel:null;
+    const levelOwned=!Number.isInteger(unlockLevel)||unlockLevel<=currentLevel;
+    input.checked=isEvent ? selected.has(w) : levelOwned;
+    input.disabled=!isEvent && !levelOwned;
     input.dataset.category=cat;
     const span=document.createElement("span");
     const meta=weaponUnlockData[w]||{};
@@ -121,10 +125,13 @@ loadFullWeaponDatabase();
 function typedInventoryModeEnabled(){return localStorage.getItem("typedInventoryMode")!=="off"}
 function typedOwnedList(){try{return JSON.parse(localStorage.getItem("typedOwnedGuns")||"[]").filter(x=>typeof x==="string")}catch(e){return[]}}
 function owned(){
- const typed=typedOwnedList();
- if(typedInventoryModeEnabled()&&typed.length)return [...new Set(typed)];
- const markedEvents=[...inv.querySelectorAll("input:checked")].map(x=>x.value);
- const automaticOwned=Object.values(db).flat().filter(w=>!eventWeapons.has(w));
+ const currentLevel=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
+ const markedEvents=[...inv.querySelectorAll("input:checked")].map(x=>x.value).filter(w=>eventWeapons.has(w));
+ const automaticOwned=Object.values(db).flat().filter(w=>{
+   if(eventWeapons.has(w)) return false;
+   const meta=weaponUnlockData[w];
+   return !meta || !Number.isInteger(meta.unlockLevel) || meta.unlockLevel<=currentLevel;
+ });
  return [...new Set([...automaticOwned,...markedEvents])];
 }
 function pick(cat,own,prefs,chosen=[]){
