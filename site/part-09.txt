@@ -79,6 +79,17 @@ document.getElementById("level")?.addEventListener("input",()=>{renderInventory(
 
 
 
+<script id="levelOwnedMigration">
+(function(){
+ const VERSION="level-owned-v2";
+ if(localStorage.getItem("loadoutOwnershipVersion")!==VERSION){
+   localStorage.removeItem("loadoutMissingGuns");
+   localStorage.removeItem("loadoutMissing");
+   localStorage.setItem("loadoutOwnershipVersion",VERSION);
+ }
+})();
+</script>
+
 <script id="missingGunTrackerFix">
 (function(){
  const KEY="loadoutMissingGuns";
