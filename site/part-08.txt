@@ -48,7 +48,7 @@
  // recommended when it is level-eligible and owned; event/special-route weapons
  // additionally require the event toggle and an ownership checkbox.
  const recommendationPool=[...new Set(
-   Object.values(db).flatMap(list=>Array.isArray(list)?list:[])
+   Array.isArray(db[cat])?db[cat]:[]
  )];
  const available=recommendationPool.filter(x=>levelEligible(x)&&!missing.includes(x));
  const ownedSet=new Set(own);
