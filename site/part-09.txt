@@ -165,4 +165,10 @@ document.getElementById("level")?.addEventListener("input",()=>{renderInventory(
 
 <script id="missingGunButtonDelegation">
 document.addEventListener("click",function(event){
- const
+  const btn=event.target.closest("[data-missing-gun]");
+  if(!btn)return;
+  event.preventDefault();
+  const name=btn.getAttribute("data-missing-gun");
+  if(window.markMissingGun) window.markMissingGun(name);
+});
+</script>
