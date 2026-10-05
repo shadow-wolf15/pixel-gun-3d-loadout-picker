@@ -1,10 +1,242 @@
- btn=event.target.closest("button[data-missing-gun]");
- if(!btn)return;
- event.preventDefault();event.stopPropagation();
- const name=btn.getAttribute("data-missing-gun");
- if(typeof window.markMissingGun==="function") window.markMissingGun(name);
- btn.textContent="Added to missing-gun list";btn.disabled=true;
-});
+<script id="weapon-list-repair">
+(function(){
+  "use strict";
+
+  function getDb(){
+    try{
+      if(typeof db==="object" && db) return db;
+    }catch(e){}
+    return {};
+  }
+
+  function getEvents(){
+    try{
+      if(typeof eventWeapons!=="undefined" && eventWeapons instanceof Set) return eventWeapons;
+    }catch(e){}
+    return new Set();
+  }
+
+  function getUnlocks(){
+    try{
+      if(typeof weaponUnlockData==="object" && weaponUnlockData) return weaponUnlockData;
+    }catch(e){}
+    return {};
+  }
+
+  function currentLevel(){
+    var el=document.getElementById("level");
+    var n=Number(el && el.value);
+    return Math.max(1,Math.min(65,Number.isFinite(n)?n:1));
+  }
+
+  function safeJson(key){
+    try{
+      var v=JSON.parse(localStorage.getItem(key)||"[]");
+      return Array.isArray(v)?v.filter(function(x){return typeof x==="string";}):[];
+    }catch(e){return [];}
+  }
+
+  function renderWeaponMaker(){
+    var box=document.getElementById("inventory");
+    if(!box) return;
+
+    var data=getDb();
+    var events=getEvents();
+    var unlocks=getUnlocks();
+    var selected=new Set(Array.prototype.map.call(box.querySelectorAll("input[type=checkbox]:checked"),function(x){return x.value;}));
+    var rows=[];
+
+    Object.keys(data).forEach(function(cat){
+      var list=Array.isArray(data[cat])?data[cat]:[];
+      list.forEach(function(name){
+        if(typeof name!=="string" || !name.trim()) return;
+        rows.push({cat:cat,name:name});
+      });
+    });
+
+    var seen=new Set();
+    rows=rows.filter(function(row){
+      var key=row.cat+"\u0000"+row.name;
+      if(seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).sort(function(a,b){return a.name.localeCompare(b.name);});
+
+    box.innerHTML="";
+
+    if(!rows.length){
+      box.innerHTML='<div class="sub" style="padding:12px">The weapon database did not load. Refresh the page once; if it still says this, the weapon data script is failing.</div>';
+      return;
+    }
+
+    var search=document.createElement("input");
+    search.type="search";
+    search.id="weaponSearch";
+    search.placeholder="Search guns...";
+    search.autocomplete="off";
+    search.style.marginBottom="8px";
+    box.appendChild(search);
+
+    var count=document.createElement("div");
+    count.id="weaponCount";
+    count.className="legend";
+    count.style.margin="4px 0 8px";
+    box.appendChild(count);
+
+    var list=document.createElement("div");
+    list.id="weaponRows";
+    box.appendChild(list);
+
+    function draw(filter){
+      list.innerHTML="";
+      var level=currentLevel();
+      var visible=rows.filter(function(row){
+        return !filter || row.name.toLowerCase().includes(filter) || row.cat.toLowerCase().includes(filter);
+      });
+
+      visible.forEach(function(row){
+        var isEvent=events.has(row.name);
+        var meta=unlocks[row.name]||{};
+        var unlock=Number.isInteger(meta.unlockLevel)?meta.unlockLevel:null;
+        var levelOwned=unlock===null || unlock<=level;
+        var label=document.createElement("label");
+        label.className="check"+(!isEvent && !levelOwned?" level-locked":"");
+
+        var input=document.createElement("input");
+        input.type="checkbox";
+        input.value=row.name;
+        input.dataset.category=row.cat;
+
+        if(isEvent){
+          input.checked=selected.has(row.name);
+          input.disabled=false;
+        }else{
+          input.checked=levelOwned;
+          input.disabled=!levelOwned;
+        }
+
+        var span=document.createElement("span");
+        span.textContent=row.cat+" — "+row.name+" • "+(
+          isEvent ? "Event/Special — check if you own it" :
+          levelOwned ? "Owned at this level" : "Unlocks at level "+unlock
+        );
+
+        label.appendChild(input);
+        label.appendChild(span);
+        list.appendChild(label);
+      });
+
+      count.textContent=visible.length+" weapon entries shown • Level "+level;
+    }
+
+    search.addEventListener("input",function(){
+      draw(search.value.trim().toLowerCase());
+    });
+
+    draw("");
+
+    box.addEventListener("change",function(e){
+      if(!e.target.matches("input[type=checkbox]")) return;
+      if(events.has(e.target.value)){
+        selected[e.target.checked?"add":"delete"](e.target.value);
+      }
+    });
+
+    var levelEl=document.getElementById("level");
+    if(levelEl && !levelEl.dataset.weaponRepairBound){
+      levelEl.dataset.weaponRepairBound="1";
+      levelEl.addEventListener("input",function(){
+        renderWeaponMaker();
+      });
+      levelEl.addEventListener("change",function(){
+        renderWeaponMaker();
+      });
+    }
+  }
+
+  function repairMissingList(){
+    var missing=Array.from(new Set(safeJson("loadoutMissingGuns").concat(safeJson("loadoutMissing"))));
+    var box=document.getElementById("missingGunList");
+    if(!box) return;
+
+    box.innerHTML="";
+    var h=document.createElement("h3");
+    h.textContent="Guns You Said You Don't Have ("+missing.length+")";
+    box.appendChild(h);
+
+    if(!missing.length){
+      var p=document.createElement("p");
+      p.className="empty-missing";
+      p.textContent="No guns marked as missing yet.";
+      box.appendChild(p);
+      return;
+    }
+
+    var ul=document.createElement("ul");
+    missing.forEach(function(name){
+      var li=document.createElement("li");
+      var label=document.createElement("span");
+      label.textContent=name;
+      var btn=document.createElement("button");
+      btn.type="button";
+      btn.textContent="I have this gun now";
+      btn.addEventListener("click",function(){
+        ["loadoutMissingGuns","loadoutMissing"].forEach(function(key){
+          var arr=safeJson(key).filter(function(x){return x!==name;});
+          localStorage.setItem(key,JSON.stringify(arr));
+        });
+        repairMissingList();
+        renderWeaponMaker();
+      });
+      li.appendChild(label);
+      li.appendChild(btn);
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+  }
+
+  function bindMissingButtons(){
+    if(document.documentElement.dataset.weaponRepairMissingBound) return;
+    document.documentElement.dataset.weaponRepairMissingBound="1";
+
+    document.addEventListener("click",function(e){
+      var btn=e.target.closest("[data-missing-gun]");
+      if(!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      var name=btn.getAttribute("data-missing-gun");
+      if(!name) return;
+
+      var arr=Array.from(new Set(safeJson("loadoutMissingGuns").concat(safeJson("loadoutMissing"),[name])));
+      localStorage.setItem("loadoutMissingGuns",JSON.stringify(arr));
+      localStorage.setItem("loadoutMissing",JSON.stringify(arr));
+
+      btn.textContent="Added to missing-gun list";
+      btn.disabled=true;
+      repairMissingList();
+    });
+  }
+
+  function start(){
+    renderWeaponMaker();
+    repairMissingList();
+    bindMissingButtons();
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",start);
+  }else{
+    start();
+  }
+
+  window.addEventListener("load",function(){
+    setTimeout(renderWeaponMaker,50);
+    setTimeout(repairMissingList,50);
+  });
+
+  window.weaponListRepair=start;
+})();
 </script>
 </body>
 </html>
