@@ -122,17 +122,79 @@ function renderInventory(){
 
 renderInventory();
 loadFullWeaponDatabase();
-function typedInventoryModeEnabled(){return localStorage.getItem("typedInventoryMode")!=="off"}
-function typedOwnedList(){try{return JSON.parse(localStorage.getItem("typedOwnedGuns")||"[]").filter(x=>typeof x==="string")}catch(e){return[]}}
+function typedInventoryModeEnabled(){return true}
+function typedOwnedList(){
+  try{
+    const a=JSON.parse(localStorage.getItem("typedOwnedGuns")||"[]");
+    return [...new Set(a.filter(x=>typeof x==="string").map(x=>x.trim()).filter(Boolean))];
+  }catch(e){return[]}
+}
+function saveTypedOwnedList(list){
+  localStorage.setItem("typedOwnedGuns",JSON.stringify([...new Set(list.filter(Boolean))]));
+  renderTypedGunList();
+}
+function allWeaponNames(){
+  return [...new Set(Object.values(db).flat().filter(x=>typeof x==="string"))];
+}
+function findWeaponName(value){
+  const needle=String(value||"").trim().toLowerCase();
+  if(!needle)return null;
+  return allWeaponNames().find(x=>x.toLowerCase()===needle)||null;
+}
+function renderTypedGunSuggestions(){
+  const dl=document.getElementById("weaponNameSuggestions"); if(!dl)return;
+  dl.innerHTML="";
+  allWeaponNames().sort((a,b)=>a.localeCompare(b)).forEach(name=>{
+    const o=document.createElement("option"); o.value=name; dl.appendChild(o);
+  });
+}
+function renderTypedGunList(){
+  const box=document.getElementById("typedGunList"); if(!box)return;
+  const selected=typedOwnedList();
+  box.innerHTML="";
+  const heading=document.createElement("h3");
+  heading.textContent="Your typed guns ("+selected.length+")";
+  box.appendChild(heading);
+  if(!selected.length){
+    const p=document.createElement("p"); p.className="empty-missing";
+    p.textContent="No guns added yet. Type the guns you own above.";
+    box.appendChild(p); return;
+  }
+  const ul=document.createElement("ul");
+  selected.forEach(name=>{
+    const li=document.createElement("li");
+    const label=document.createElement("span"); label.textContent=name;
+    const btn=document.createElement("button"); btn.type="button"; btn.textContent="Remove";
+    btn.addEventListener("click",()=>saveTypedOwnedList(typedOwnedList().filter(x=>x!==name)));
+    li.append(label,btn); ul.appendChild(li);
+  });
+  box.appendChild(ul);
+}
+function addTypedGun(value){
+  const name=findWeaponName(value);
+  const input=document.getElementById("typedGunInput");
+  if(!name){
+    if(input) input.setCustomValidity("Type a gun name and choose an exact weapon from the list.");
+    return false;
+  }
+  if(input) input.setCustomValidity("");
+  const selected=typedOwnedList();
+  if(!selected.some(x=>x.toLowerCase()===name.toLowerCase())) selected.push(name);
+  saveTypedOwnedList(selected);
+  if(input){input.value="";input.focus();}
+  return true;
+}
 function owned(){
  const currentLevel=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
- const markedEvents=[...inv.querySelectorAll("input:checked")].map(x=>x.value).filter(w=>eventWeapons.has(w));
- const automaticOwned=Object.values(db).flat().filter(w=>{
-   if(eventWeapons.has(w)) return false;
+ const includeEvents=document.getElementById("includeEvents")?.checked===true;
+ const missing=JSON.parse(localStorage.getItem("loadoutMissingGuns")||"[]");
+ const typed=typedOwnedList();
+ return [...new Set(typed)].filter(w=>{
+   if(missing.includes(w)) return false;
    const meta=weaponUnlockData[w];
+   if(eventWeapons.has(w)) return includeEvents;
    return !meta || !Number.isInteger(meta.unlockLevel) || meta.unlockLevel<=currentLevel;
  });
- return [...new Set([...automaticOwned,...markedEvents])];
 }
 function pick(cat,own,prefs,chosen=[]){
  const feedback=JSON.parse(localStorage.getItem("loadoutFeedback")||"{}");
@@ -181,3 +243,24 @@ function pick(cat,own,prefs,chosen=[]){
   hybrid_teamrush:["support","rush","mobility","control"],
   hybrid_allrounder:["mid","burst","mobility","control"]
  }[style]||["mid","reliable"];
+
+
+function initTypedGunPicker(){
+  renderTypedGunSuggestions();
+  renderTypedGunList();
+  const input=document.getElementById("typedGunInput");
+  const button=document.getElementById("addTypedGun");
+  if(button&&!button.dataset.bound){
+    button.dataset.bound="1";
+    button.addEventListener("click",()=>addTypedGun(input?.value));
+  }
+  if(input&&!input.dataset.bound){
+    input.dataset.bound="1";
+    input.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){e.preventDefault();addTypedGun(input.value);}
+    });
+    input.addEventListener("input",()=>input.setCustomValidity(""));
+  }
+}
+window.initTypedGunPicker=initTypedGunPicker;
+initTypedGunPicker();
