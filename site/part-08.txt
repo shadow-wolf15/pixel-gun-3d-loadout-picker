@@ -126,7 +126,25 @@ function build(){
  const petSeed=Number(localStorage.getItem("loadoutBuildNumber")||0);
  const pet=preferredPets.find(x=>pets.includes(x)) ||
    pets[(Math.abs(petSeed*31)+(style||"balanced").length)%pets.length];
- const grenade=mode==="Point Capture"?"Black Hole":style==="aggressive"?"Cluster Grenade":style==="pusher"?"Cluster Grenade":style==="rusher"?"Time Machine":style==="short_long"?"Black Hole":style==="spammer"?"Poisonous Grenade":style==="overpowered"?"Black Hole":style==="sniper"?"Sticky Mine":"Cyber Grenade";
+ const grenadePreferences={
+   "Point Capture":["Singular Grenade","Black Hole","Cluster Grenade","Smile Mine"],
+   aggressive:["Grenade-Teleport","Cluster Grenade","Molotov Cocktail","Firecrackers"],
+   pusher:["Nuclear Grenade","Cluster Grenade","Singular Grenade","Molotov Cocktail"],
+   rusher:["Grenade-Teleport","Flash Grenade","Sticky Candy","Smile Mine"],
+   short_long:["Singular Grenade","Sticky Candy","Flash Grenade","Frag Grenade"],
+   spammer:["Firecrackers","Cluster Grenade","Molotov Cocktail","Frag Grenade"],
+   overpowered:["Nuclear Grenade","Singular Grenade","Cluster Grenade","Molotov Cocktail"],
+   sniper:["Frag Grenade","Flash Grenade","Sticky Candy","Fake Bonus"],
+   stealth:["Fake Bonus","Smile Mine","Sticky Candy","Flash Grenade"],
+   mobility:["Grenade-Teleport","Sticky Candy","Flash Grenade","Frag Grenade"],
+   defensive:["Smile Mine","Singular Grenade","Nuclear Grenade","Sticky Candy"],
+   area:["Nuclear Grenade","Cluster Grenade","Molotov Cocktail","Singular Grenade"],
+   support:["Flash Grenade","Sticky Candy","Frag Grenade","Fake Bonus"]
+ };
+ const grenadeOrder=grenadePreferences[mode==="Point Capture"?"Point Capture":style]||[];
+ const grenadeSeed=Number(localStorage.getItem("loadoutBuildNumber")||0);
+ const grenade=grenadeOrder.find(x=>grenades.includes(x)) ||
+   grenades[(Math.abs(grenadeSeed*17)+(style||"balanced").length+(mode||"Any mode").length)%grenades.length];
  const styleNames={balanced:"balanced",aggressive:"aggressive / rush",pusher:"pusher / push-hard",rusher:"rusher / close-range",sniper:"sniper / long-range",short_long:"mid range",
 hybrid_rush:"rush + range",hybrid_tank:"tank + damage",hybrid_control:"control + damage",hybrid_stealth:"stealth + rush",hybrid_sniper:"sniper + support",hybrid_spam:"spammer + area control",hybrid_mobility:"mobility + rush",hybrid_defense:"defense + long range",hybrid_heavy:"heavy + close range",hybrid_assault:"assault + mid range",hybrid_pusher:"pusher + area control",hybrid_meta:"overpowered + spammer",hybrid_teamrush:"team + rush",hybrid_allrounder:"all-rounder mix",support:"support / team",defensive:"defensive / hold-position",area:"area-control / splash",stealth:"stealth / ambush",mobility:"mobility / fast-movement",spammer:"spammer / high-fire-rate",overpowered:"overpowered / meta-style",casual:"casual / easy"};
  let why=`At level ${level}, this setup is tuned for ${styleNames[style]} play in ${mode}. `;
