@@ -124,13 +124,20 @@ function renderInventory(){
 }
 renderInventory();
 loadFullWeaponDatabase();
-function typedInventoryModeEnabled(){return true}
+function typedInventoryModeEnabled(){return localStorage.getItem("typedOnlyMode")==="on"}
 function syncTypedGunModeUI(){
   const on=typedInventoryModeEnabled();
   const btn=document.getElementById("typedGunModeToggle");
-  const controls=document.getElementById("typedGunControls");
-  if(btn){btn.textContent="Use typed guns only: "+(on?"ON":"OFF");btn.setAttribute("aria-pressed",String(on));}
-  if(controls)controls.hidden=!on;
+  const help=document.getElementById("typedGunModeHelp");
+  if(btn){
+    btn.textContent="Use typed guns only: "+(on?"ON":"OFF");
+    btn.setAttribute("aria-pressed",String(on));
+  }
+  if(help){
+    help.textContent=on
+      ?"ON: the loadout picker will ONLY choose from the guns in your typed list."
+      :"OFF: the loadout picker can choose from every eligible gun in the weapon database.";
+  }
 }
 
 function typedOwnedList(){
@@ -206,13 +213,13 @@ function owned(){
      return !meta || !Number.isInteger(meta.unlockLevel) || meta.unlockLevel<=currentLevel;
    });
  }
- const normal=Object.values(db).flat().filter(w=>{
-   if(eventWeapons.has(w)) return false;
+ const allEligible=Object.values(db).flat().filter(w=>{
+   if(missing.includes(w)) return false;
    const meta=weaponUnlockData[w];
+   if(eventWeapons.has(w)) return includeEvents;
    return !meta || !Number.isInteger(meta.unlockLevel) || meta.unlockLevel<=currentLevel;
  });
- const eventOwned=includeEvents ? [...document.querySelectorAll('#inventory input[type="checkbox"]:checked')].map(x=>x.value).filter(w=>eventWeapons.has(w)) : [];
- return [...new Set([...normal,...eventOwned])].filter(w=>!missing.includes(w));
+ return [...new Set(allEligible)];
 }
 function pick(cat,own,prefs,chosen=[]){
  const feedback=JSON.parse(localStorage.getItem("loadoutFeedback")||"{}");
@@ -288,7 +295,7 @@ function initTypedGunModeToggle(){
     btn.dataset.bound="1";
     btn.addEventListener("click",()=>{
       const next=!typedInventoryModeEnabled();
-      localStorage.setItem("typedInventoryMode",next?"on":"off");
+      localStorage.setItem("typedOnlyMode",next?"on":"off");
       syncTypedGunModeUI();
     });
   }
