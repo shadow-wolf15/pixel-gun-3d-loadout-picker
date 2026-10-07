@@ -30,6 +30,16 @@
 <option value="casual">Casual / Easy</option>
 </select>
 <button class="primary" id="build">⚡ Build my loadout</button>
+<div class="gemini-panel" style="margin:10px 0 12px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px">
+  <label class="title">Gemini Gun Picker</label>
+  <div class="sub" style="margin-bottom:8px">Use Gemini to choose the best guns from the exact weapon pool available to this build. Gemini 1.5 Pro is retired by Google, so this uses the current Gemini 3.1 Pro Preview model.</div>
+  <input id="geminiApiKey" type="password" autocomplete="off" placeholder="Paste your Gemini API key" style="width:100%;box-sizing:border-box;margin-bottom:8px">
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" id="geminiPick" class="secondary">✨ Use Gemini to Pick Guns</button>
+    <button type="button" id="clearGeminiKey" class="secondary">Clear Key</button>
+  </div>
+  <div id="geminiStatus" class="legend" style="margin-top:8px">Your key is kept only in this browser session and is never placed in the GitHub files.</div>
+</div>
 <label class="title">Weapon picker</label>
 <div class="sub" style="margin-bottom:8px">The loadout picker can use <strong>every weapon loaded into the database</strong>. Turn on the button below to limit it to only the guns you type.</div>
 <button type="button" id="typedGunModeToggle" class="secondary" aria-pressed="false" style="width:100%;margin-bottom:8px">Use typed guns only: OFF</button>
