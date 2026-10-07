@@ -28,7 +28,21 @@ const pets=[
   "Cyber Grenade","Poisonous Grenade","Time Machine","Cluster Grenade","Sticky Mine","Black Hole",
   "Frag Grenade","Flash Grenade","Nuclear Grenade","Singular Grenade","Grenade-Teleport",
   "Molotov Cocktail","Sticky Candy","Smile Mine","Fake Bonus","Firecrackers"
-];
+], armors=[
+  "Default Armor","Steel Armor","Golden Armor","Crystal Armor",
+  "Wooden Clan Armor","Iron Clan Armor","Steel Clan Armor","Golden Clan Armor","Crystal Clan Armor",
+  "Iron Miner Armor","Golden Miner Armor","Crystal Miner Armor",
+  "Ultimate Defense Armor (UDA)","Veteran's Armor","Symbiotic Armor","Exo Pilot Armor","Glitch Hunter Armor",
+  "Inflatable Armor","Cyber Santa Armor","Halloween Armor","Pilgrim Armor","Dragon Armor","Wonder Vest"
+], armorCategory={
+  "Default Armor":"Standard","Steel Armor":"Standard","Golden Armor":"Standard","Crystal Armor":"Standard",
+  "Wooden Clan Armor":"Clan","Iron Clan Armor":"Clan","Steel Clan Armor":"Clan","Golden Clan Armor":"Clan","Crystal Clan Armor":"Clan",
+  "Iron Miner Armor":"Miner","Golden Miner Armor":"Miner","Crystal Miner Armor":"Miner",
+  "Ultimate Defense Armor (UDA)":"Event/Mythical/Legacy","Veteran's Armor":"Event/Mythical/Legacy","Symbiotic Armor":"Event/Mythical/Legacy",
+  "Exo Pilot Armor":"Event/Mythical/Legacy","Glitch Hunter Armor":"Event/Mythical/Legacy","Inflatable Armor":"Event/Mythical/Legacy",
+  "Cyber Santa Armor":"Event/Mythical/Legacy","Halloween Armor":"Event/Mythical/Legacy","Pilgrim Armor":"Event/Mythical/Legacy",
+  "Dragon Armor":"Event/Mythical/Legacy","Wonder Vest":"Event/Mythical/Legacy"
+};
 const inv=document.getElementById("inventory");
 let databaseLoaded=false;
 const wikiCategoryMap={Primary:"Primary",Backup:"Backup",Melee:"Melee",Special:"Special",Sniper:"Sniper",Heavy:"Heavy"};
