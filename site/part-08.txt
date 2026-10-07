@@ -145,6 +145,41 @@ function build(){
  const grenadeSeed=Number(localStorage.getItem("loadoutBuildNumber")||0);
  const grenade=grenadeOrder.find(x=>grenades.includes(x)) ||
    grenades[(Math.abs(grenadeSeed*17)+(style||"balanced").length+(mode||"Any mode").length)%grenades.length];
+ const armorPreferences={
+   balanced:["Crystal Armor","Golden Armor","Steel Armor","Default Armor"],
+   aggressive:["Steel Clan Armor","Crystal Armor","Inflatable Armor","Golden Armor"],
+   pusher:["Crystal Armor","Crystal Clan Armor","Steel Clan Armor","Ultimate Defense Armor (UDA)"],
+   rusher:["Inflatable Armor","Crystal Armor","Steel Clan Armor","Golden Armor"],
+   sniper:["Crystal Armor","Golden Miner Armor","Crystal Miner Armor","Wonder Vest"],
+   short_long:["Crystal Armor","Golden Armor","Crystal Clan Armor","Steel Armor"],
+   spammer:["Inflatable Armor","Steel Clan Armor","Crystal Armor","Golden Armor"],
+   overpowered:["Ultimate Defense Armor (UDA)","Crystal Clan Armor","Crystal Armor","Symbiotic Armor"],
+   support:["Crystal Armor","Golden Armor","Iron Clan Armor","Symbiotic Armor"],
+   defensive:["Ultimate Defense Armor (UDA)","Crystal Armor","Crystal Clan Armor","Steel Armor"],
+   area:["Crystal Armor","Ultimate Defense Armor (UDA)","Crystal Clan Armor","Golden Armor"],
+   stealth:["Glitch Hunter Armor","Inflatable Armor","Crystal Armor","Black Armor"],
+   mobility:["Inflatable Armor","Exo Pilot Armor","Crystal Armor","Steel Clan Armor"],
+   hybrid_rush:["Inflatable Armor","Crystal Armor","Steel Clan Armor"],
+   hybrid_tank:["Ultimate Defense Armor (UDA)","Crystal Clan Armor","Crystal Armor"],
+   hybrid_control:["Symbiotic Armor","Crystal Armor","Crystal Clan Armor"],
+   hybrid_stealth:["Glitch Hunter Armor","Inflatable Armor","Crystal Armor"],
+   hybrid_sniper:["Crystal Armor","Crystal Miner Armor","Wonder Vest"],
+   hybrid_spam:["Inflatable Armor","Steel Clan Armor","Crystal Armor"],
+   hybrid_mobility:["Inflatable Armor","Exo Pilot Armor","Crystal Armor"],
+   hybrid_defense:["Ultimate Defense Armor (UDA)","Crystal Clan Armor","Crystal Armor"],
+   hybrid_heavy:["Ultimate Defense Armor (UDA)","Crystal Clan Armor","Crystal Armor"],
+   hybrid_assault:["Crystal Armor","Steel Clan Armor","Golden Armor"],
+   hybrid_pusher:["Crystal Armor","Crystal Clan Armor","Steel Clan Armor"],
+   hybrid_meta:["Ultimate Defense Armor (UDA)","Crystal Clan Armor","Crystal Armor"],
+   hybrid_teamrush:["Crystal Armor","Steel Clan Armor","Symbiotic Armor"],
+   hybrid_allrounder:["Crystal Armor","Golden Armor","Steel Clan Armor"]
+ };
+ const armorPreferred=armorPreferences[style]||armorPreferences.balanced;
+ const armorSeed=Number(localStorage.getItem("loadoutBuildNumber")||0);
+ let armor=armorPreferred.find(x=>armors.includes(x));
+ // The source list specifically recommends Crystal Armor for free-to-play level 30+.
+ if(level>=30 && armors.includes("Crystal Armor") && !["overpowered","defensive"].includes(style)) armor="Crystal Armor";
+ armor=armor||armors[(Math.abs(armorSeed*23)+(style||"balanced").length)%armors.length];
  const styleNames={balanced:"balanced",aggressive:"aggressive / rush",pusher:"pusher / push-hard",rusher:"rusher / close-range",sniper:"sniper / long-range",short_long:"mid range",
 hybrid_rush:"rush + range",hybrid_tank:"tank + damage",hybrid_control:"control + damage",hybrid_stealth:"stealth + rush",hybrid_sniper:"sniper + support",hybrid_spam:"spammer + area control",hybrid_mobility:"mobility + rush",hybrid_defense:"defense + long range",hybrid_heavy:"heavy + close range",hybrid_assault:"assault + mid range",hybrid_pusher:"pusher + area control",hybrid_meta:"overpowered + spammer",hybrid_teamrush:"team + rush",hybrid_allrounder:"all-rounder mix",support:"support / team",defensive:"defensive / hold-position",area:"area-control / splash",stealth:"stealth / ambush",mobility:"mobility / fast-movement",spammer:"spammer / high-fire-rate",overpowered:"overpowered / meta-style",casual:"casual / easy"};
  let why=`At level ${level}, this setup is tuned for ${styleNames[style]} play in ${mode}. `;
