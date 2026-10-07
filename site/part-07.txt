@@ -124,7 +124,7 @@ function renderInventory(){
 }
 renderInventory();
 loadFullWeaponDatabase();
-function typedInventoryModeEnabled(){return localStorage.getItem("typedInventoryMode")==="on"}
+function typedInventoryModeEnabled(){return true}
 function syncTypedGunModeUI(){
   const on=typedInventoryModeEnabled();
   const btn=document.getElementById("typedGunModeToggle");
