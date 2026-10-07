@@ -180,6 +180,39 @@ function build(){
  // The source list specifically recommends Crystal Armor for free-to-play level 30+.
  if(level>=30 && armors.includes("Crystal Armor") && !["overpowered","defensive"].includes(style)) armor="Crystal Armor";
  armor=armor||armors[(Math.abs(armorSeed*23)+(style||"balanced").length)%armors.length];
+ const gadgetPreferences={
+   balanced:["Energy Shield","Medkit","Turret","Barrier","Battle Mech"],
+   aggressive:["Rocket Mech","Battle Mech","Robot Samurai","Jetpack","Fire Mushroom"],
+   pusher:["Battle Mech","Rocket Mech","Barrier","Turret","Blizzard Generator"],
+   rusher:["Robot Samurai","Jetpack","Stealth Bracelet","Battle Mech","Super Magnet"],
+   sniper:["X-Ray Glasses","Stealth Bracelet","Turret","Energy Shield","Barrier"],
+   short_long:["Jetpack","Energy Shield","Super Magnet","Turret","Medkit"],
+   spammer:["Turret","Sticky Turret","Fire Mushroom","Rocket Mech","Pandora's Box"],
+   overpowered:["Battle Mech","Rocket Mech","Robot Samurai","Energy Shield","Royal Guardian"],
+   support:["Medical Station","Medkit","Leader's Drum","Pet Booster","Energy Shield"],
+   defensive:["Energy Shield","Barrier","Armor Generator","Turtle Shell","Medical Station"],
+   area:["Blizzard Generator","Pandora's Box","Fire Mushroom","Sticky Turret","Turret"],
+   stealth:["Stealth Bracelet","X-Ray Glasses","Jetpack","Disabler","Denied!"],
+   mobility:["Jetpack","Super Magnet","Time Machine","Robot Samurai","Rocket Mech"],
+   hybrid_rush:["Rocket Mech","Jetpack","Barrier","Turret"],
+   hybrid_tank:["Battle Mech","Energy Shield","Armor Generator","Medical Station"],
+   hybrid_control:["Disabler","Blizzard Generator","Barrier","Sticky Turret"],
+   hybrid_stealth:["Stealth Bracelet","X-Ray Glasses","Disabler","Jetpack"],
+   hybrid_sniper:["X-Ray Glasses","Turret","Energy Shield","Stealth Bracelet"],
+   hybrid_spam:["Sticky Turret","Fire Mushroom","Rocket Mech","Pandora's Box"],
+   hybrid_mobility:["Jetpack","Robot Samurai","Super Magnet","Time Machine"],
+   hybrid_defense:["Energy Shield","Barrier","Armor Generator","Turtle Shell"],
+   hybrid_heavy:["Battle Mech","Rocket Mech","Royal Guardian","Energy Shield"],
+   hybrid_assault:["Rocket Mech","Battle Mech","Turret","Jetpack"],
+   hybrid_pusher:["Battle Mech","Blizzard Generator","Barrier","Sticky Turret"],
+   hybrid_meta:["Robot Samurai","Battle Mech","Energy Shield","Royal Guardian"],
+   hybrid_teamrush:["Medical Station","Leader's Drum","Battle Mech","Energy Shield"],
+   hybrid_allrounder:["Energy Shield","Medkit","Turret","Jetpack"]
+ };
+ const gadgetPreferred=gadgetPreferences[style]||gadgetPreferences.balanced;
+ const gadgetSeed=Number(localStorage.getItem("loadoutBuildNumber")||0);
+ const gadget=gadgetPreferred.find(x=>gadgets.includes(x)) ||
+   gadgets[(Math.abs(gadgetSeed*29)+(style||"balanced").length+(mode||"Any mode").length)%gadgets.length];
  const styleNames={balanced:"balanced",aggressive:"aggressive / rush",pusher:"pusher / push-hard",rusher:"rusher / close-range",sniper:"sniper / long-range",short_long:"mid range",
 hybrid_rush:"rush + range",hybrid_tank:"tank + damage",hybrid_control:"control + damage",hybrid_stealth:"stealth + rush",hybrid_sniper:"sniper + support",hybrid_spam:"spammer + area control",hybrid_mobility:"mobility + rush",hybrid_defense:"defense + long range",hybrid_heavy:"heavy + close range",hybrid_assault:"assault + mid range",hybrid_pusher:"pusher + area control",hybrid_meta:"overpowered + spammer",hybrid_teamrush:"team + rush",hybrid_allrounder:"all-rounder mix",support:"support / team",defensive:"defensive / hold-position",area:"area-control / splash",stealth:"stealth / ambush",mobility:"mobility / fast-movement",spammer:"spammer / high-fire-rate",overpowered:"overpowered / meta-style",casual:"casual / easy"};
  let why=`At level ${level}, this setup is tuned for ${styleNames[style]} play in ${mode}. `;
