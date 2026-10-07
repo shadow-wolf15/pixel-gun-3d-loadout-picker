@@ -50,6 +50,7 @@
       var list=Array.isArray(data[cat])?data[cat]:[];
       list.forEach(function(name){
         if(typeof name!=="string" || !name.trim()) return;
+        if(!events.has(name)) return;
         rows.push({cat:cat,name:name});
       });
     });
@@ -65,14 +66,14 @@
     box.innerHTML="";
 
     if(!rows.length){
-      box.innerHTML='<div class="sub" style="padding:12px">The weapon database did not load. Refresh the page once; if it still says this, the weapon data script is failing.</div>';
+      box.innerHTML='<div class="sub" style="padding:12px">No known event/special guns are currently loaded.</div>';
       return;
     }
 
     var search=document.createElement("input");
     search.type="search";
     search.id="weaponSearch";
-    search.placeholder="Search guns...";
+    search.placeholder="Search known event guns...";
     search.autocomplete="off";
     search.style.marginBottom="8px";
     box.appendChild(search);
@@ -126,7 +127,7 @@
         list.appendChild(label);
       });
 
-      count.textContent=visible.length+" weapon entries shown • Level "+level;
+      count.textContent=visible.length+" known event/special guns shown";
     }
 
     search.addEventListener("input",function(){
