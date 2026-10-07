@@ -31,12 +31,12 @@
 </select>
 <button class="primary" id="build">⚡ Build my loadout</button>
 <div class="typed-gun-panel" style="border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;margin:12px 0">
-<label class="title">Choose your own guns</label>
-<div class="sub" style="margin-bottom:8px">Turn this on to make the loadout builder select <strong>only</strong> from guns you type in.</div>
+<label class="title">What guns do you have?</label>
+<div class="sub" style="margin-bottom:8px">Turn this on, then type a gun you own, select the matching name, and press Enter or Add Gun. The loadout builder will use <strong>only the guns you add here</strong>.</div>
 <button type="button" id="typedGunModeToggle" class="secondary" aria-pressed="false">Use typed guns only: OFF</button>
 <div id="typedGunControls" hidden style="margin-top:10px">
   <div class="typed-gun-entry" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-    <input id="typedGunInput" type="text" list="weaponNameSuggestions" autocomplete="off" placeholder="Type a gun you own..." style="flex:1;min-width:220px">
+    <input id="typedGunInput" type="text" list="weaponNameSuggestions" autocomplete="off" placeholder="Type a gun name..." style="flex:1;min-width:220px">
     <button type="button" id="addTypedGun" class="secondary">Add Gun</button>
     <datalist id="weaponNameSuggestions"></datalist>
   </div>
