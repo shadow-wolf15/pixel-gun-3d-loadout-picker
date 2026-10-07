@@ -12,6 +12,7 @@ style==="overpowered"?"This setup prioritizes the strongest options in the demo 
  ${slot("Sniper",load.Sniper,load.Sniper.startsWith("No owned ")?"Select an owned sniper weapon first.":"Best-fit long-range option from your inventory") }
  ${slot("Heavy",load.Heavy,load.Heavy.startsWith("No owned ")?"Select an owned heavy weapon first.":"Best-fit area / burst option from your inventory") }
  ${slot("Armor",armor,"Recommended armor • "+(armorCategory[armor]||"Armor"),"armor")}
+ ${slot("Gadget",gadget,"Recommended gadget • "+(gadgetCategory[gadget]||"Support equipment"),"gadget")}
  ${slot("Pet",pet,"Recommended companion","pet")}
  ${slot("Grenade",grenade,"Situational utility","grenade")}
  </div><div class="Loadout Builder"><strong>🧠 Why this loadout?</strong><p>${why}</p>
