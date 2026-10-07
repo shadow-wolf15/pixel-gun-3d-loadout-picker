@@ -91,39 +91,48 @@ function renderInventory(){
   if(!inv) return;
   const selected=new Set([...inv.querySelectorAll("input:checked")].map(x=>x.value));
   inv.innerHTML="";
-  const all=[...new Set(Object.entries(db).flatMap(([cat,arr])=>arr.map(w=>JSON.stringify({cat,w}))))].map(x=>JSON.parse(x));
-  all.sort((a,b)=>a.w.localeCompare(b.w));
+  const rows=[];
+  Object.entries(db).forEach(([cat,arr])=>{
+    (Array.isArray(arr)?arr:[]).forEach(w=>{
+      if(typeof w==="string" && eventWeapons.has(w)) rows.push({cat,w});
+    });
+  });
+  const seen=new Set();
+  const all=rows.filter(x=>{
+    const key=x.cat+"\\0"+x.w;
+    if(seen.has(key)) return false;
+    seen.add(key); return true;
+  }).sort((a,b)=>a.w.localeCompare(b.w));
   if(!all.length){
-    inv.innerHTML='<div class="sub">Weapon database is empty.</div>';
+    inv.innerHTML='<div class="sub">No known event/special guns are currently loaded.</div>';
     return;
   }
   const frag=document.createDocumentFragment();
   all.forEach(({cat,w})=>{
-    const isEvent=eventWeapons.has(w);
-    const l=document.createElement("label");
-    l.className="check";
+    const l=document.createElement("label"); l.className="check";
     const input=document.createElement("input");
-    input.type="checkbox"; input.value=w;
-    const currentLevel=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
-    const unlockLevel=Number.isInteger((weaponUnlockData[w]||{}).unlockLevel)?weaponUnlockData[w].unlockLevel:null;
-    const levelOwned=!Number.isInteger(unlockLevel)||unlockLevel<=currentLevel;
-    input.checked=isEvent ? selected.has(w) : levelOwned;
-    input.disabled=!isEvent && !levelOwned;
-    input.dataset.category=cat;
+    input.type="checkbox"; input.value=w; input.checked=selected.has(w);
+    input.dataset.category=cat; input.dataset.eventGun="true";
     const span=document.createElement("span");
     const meta=weaponUnlockData[w]||{};
-    const levelText=Number.isInteger(meta.unlockLevel)?`Level ${meta.unlockLevel}+`:"Level unverified";
-    span.textContent=`${cat} — ${w} • ${isEvent?"Special/Event — mark if owned":"Armory — automatically owned"} • ${levelText}`;
+    span.textContent=cat+" — "+w+" • Known event/special gun";
     l.append(input,span); frag.appendChild(l);
   });
   inv.appendChild(frag);
   const status=document.getElementById("levelStatus");
-  if(status) status.textContent=`All ${all.length} weapon entries are listed. Armory weapons are pre-owned automatically; special/event weapons can be checked manually. Unknown-level weapons remain eligible for recommendations.`;
+  if(status) status.textContent="Showing "+all.length+" known event/special guns only. Normal guns are not in this list.";
 }
-
 renderInventory();
 loadFullWeaponDatabase();
-function typedInventoryModeEnabled(){return true}
+function typedInventoryModeEnabled(){return localStorage.getItem("typedInventoryMode")==="on"}
+function syncTypedGunModeUI(){
+  const on=typedInventoryModeEnabled();
+  const btn=document.getElementById("typedGunModeToggle");
+  const controls=document.getElementById("typedGunControls");
+  if(btn){btn.textContent="Use typed guns only: "+(on?"ON":"OFF");btn.setAttribute("aria-pressed",String(on));}
+  if(controls)controls.hidden=!on;
+}
+
 function typedOwnedList(){
   try{
     const a=JSON.parse(localStorage.getItem("typedOwnedGuns")||"[]");
@@ -189,13 +198,21 @@ function owned(){
  const currentLevel=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
  const includeEvents=document.getElementById("includeEvents")?.checked===true;
  const missing=JSON.parse(localStorage.getItem("loadoutMissingGuns")||"[]");
- const typed=typedOwnedList();
- return [...new Set(typed)].filter(w=>{
-   if(missing.includes(w)) return false;
+ if(typedInventoryModeEnabled()){
+   return typedOwnedList().filter(w=>{
+     if(missing.includes(w)) return false;
+     if(eventWeapons.has(w)) return includeEvents;
+     const meta=weaponUnlockData[w];
+     return !meta || !Number.isInteger(meta.unlockLevel) || meta.unlockLevel<=currentLevel;
+   });
+ }
+ const normal=Object.values(db).flat().filter(w=>{
+   if(eventWeapons.has(w)) return false;
    const meta=weaponUnlockData[w];
-   if(eventWeapons.has(w)) return includeEvents;
    return !meta || !Number.isInteger(meta.unlockLevel) || meta.unlockLevel<=currentLevel;
  });
+ const eventOwned=includeEvents ? [...document.querySelectorAll('#inventory input[type="checkbox"]:checked')].map(x=>x.value).filter(w=>eventWeapons.has(w)) : [];
+ return [...new Set([...normal,...eventOwned])].filter(w=>!missing.includes(w));
 }
 function pick(cat,own,prefs,chosen=[]){
  const feedback=JSON.parse(localStorage.getItem("loadoutFeedback")||"{}");
@@ -264,4 +281,17 @@ function initTypedGunPicker(){
   }
 }
 window.initTypedGunPicker=initTypedGunPicker;
+function initTypedGunModeToggle(){
+  syncTypedGunModeUI();
+  const btn=document.getElementById("typedGunModeToggle");
+  if(btn&&!btn.dataset.bound){
+    btn.dataset.bound="1";
+    btn.addEventListener("click",()=>{
+      const next=!typedInventoryModeEnabled();
+      localStorage.setItem("typedInventoryMode",next?"on":"off");
+      syncTypedGunModeUI();
+    });
+  }
+}
 initTypedGunPicker();
+initTypedGunModeToggle();
