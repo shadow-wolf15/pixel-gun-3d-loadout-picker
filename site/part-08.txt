@@ -108,8 +108,24 @@ function build(){
    }
    if(typeof load[c]==="string"&&!load[c].startsWith("No ")) chosen.push(load[c]);
  });
- const pet=style==="aggressive"?"Dragon":style==="pusher"?"Dragon":style==="rusher"?"Werewolf":style==="short_long"?"Phoenix":style==="spammer"?"Mech Dino":style==="overpowered"?"Dragon":style.startsWith("hybrid_")?"Phoenix":
-style==="support"?"Robo Dog":style==="sniper"?"Phoenix":"Cyber Cat";
+ const petPreferences={
+   aggressive:["Tiger","Wolf","Panther","Rhino","Dinosaur"],
+   pusher:["Rhino","Dinosaur","Mammoth","Griffin","Panther"],
+   rusher:["Wolf","Tiger","Sabertooth Tiger","Panther","Dachshund"],
+   short_long:["Eagle","Owl","Phoenix","Parrot","Articuno"],
+   spammer:["Turbo Cat","8-bit-boi","Mecha Kitten","Cyber Phoenix","Parrot"],
+   overpowered:['"T-REX"',"Golem","Griffin","Mammoth","Cyber Phoenix"],
+   support:["Eagle Spirit","Support Piglet","Wise Owl","Phoenix","Parrot"],
+   sniper:["Eagle","Owl","Articuno","Phoenix","Pterodactyl"],
+   defensive:["Rhino","Turtle","White Bear","Golem","Mammoth"],
+   area:["Golem","Griffin","Mammoth","Dragon","Phoenix"],
+   stealth:["Fox","Panther","Fang","Hedgehog","Articuno"],
+   mobility:["Kangaroo","Wolf","Pterodactyl","Parade Horse","Turbo Cat"]
+ };
+ const preferredPets=petPreferences[style]||[];
+ const petSeed=Number(localStorage.getItem("loadoutBuildNumber")||0);
+ const pet=preferredPets.find(x=>pets.includes(x)) ||
+   pets[(Math.abs(petSeed*31)+(style||"balanced").length)%pets.length];
  const grenade=mode==="Point Capture"?"Black Hole":style==="aggressive"?"Cluster Grenade":style==="pusher"?"Cluster Grenade":style==="rusher"?"Time Machine":style==="short_long"?"Black Hole":style==="spammer"?"Poisonous Grenade":style==="overpowered"?"Black Hole":style==="sniper"?"Sticky Mine":"Cyber Grenade";
  const styleNames={balanced:"balanced",aggressive:"aggressive / rush",pusher:"pusher / push-hard",rusher:"rusher / close-range",sniper:"sniper / long-range",short_long:"mid range",
 hybrid_rush:"rush + range",hybrid_tank:"tank + damage",hybrid_control:"control + damage",hybrid_stealth:"stealth + rush",hybrid_sniper:"sniper + support",hybrid_spam:"spammer + area control",hybrid_mobility:"mobility + rush",hybrid_defense:"defense + long range",hybrid_heavy:"heavy + close range",hybrid_assault:"assault + mid range",hybrid_pusher:"pusher + area control",hybrid_meta:"overpowered + spammer",hybrid_teamrush:"team + rush",hybrid_allrounder:"all-rounder mix",support:"support / team",defensive:"defensive / hold-position",area:"area-control / splash",stealth:"stealth / ambush",mobility:"mobility / fast-movement",spammer:"spammer / high-fire-rate",overpowered:"overpowered / meta-style",casual:"casual / easy"};
