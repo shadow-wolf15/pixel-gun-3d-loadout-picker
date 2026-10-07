@@ -30,15 +30,19 @@
 <option value="casual">Casual / Easy</option>
 </select>
 <button class="primary" id="build">⚡ Build my loadout</button>
+<label class="title">Weapon picker</label>
+<div class="sub" style="margin-bottom:8px">The loadout picker can use <strong>every weapon loaded into the database</strong>. Turn on the button below to limit it to only the guns you type.</div>
+<button type="button" id="typedGunModeToggle" class="secondary" aria-pressed="false" style="width:100%;margin-bottom:8px">Use typed guns only: OFF</button>
+<div id="typedGunModeHelp" class="legend" style="margin-bottom:10px">OFF: pick from every eligible gun. ON: pick only from the guns in your typed list.</div>
 <label class="title">What guns do you have?</label>
-<div class="sub" style="margin-bottom:8px">Type a gun you own, select the matching name, then press Enter or Add Gun. The loadout builder will use <strong>only the guns you add here</strong>.</div>
+<div class="sub" style="margin-bottom:8px">Type a gun you own, select the matching name, then press Enter or Add Gun.</div>
 <div class="typed-gun-entry" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
   <input id="typedGunInput" type="text" list="weaponNameSuggestions" autocomplete="off" placeholder="Type a gun name..." style="flex:1;min-width:220px">
   <button type="button" id="addTypedGun" class="secondary">Add Gun</button>
   <datalist id="weaponNameSuggestions"></datalist>
 </div>
 <div id="typedGunList" class="missing-gun-list" style="margin:8px 0"></div>
-<div class="legend">Recommendations use only the guns you type above.</div>
+<div class="legend">Your typed list is only used when <strong>Use typed guns only</strong> is ON.</div>
 </aside>
 
 <main class="panel results">
