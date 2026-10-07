@@ -25,6 +25,105 @@ style==="overpowered"?"This setup prioritizes the strongest options in the demo 
  </div>`;
  if(window.renderMissingGunList) window.renderMissingGunList();
 }
+const GEMINI_MODEL="gemini-3.1-pro-preview";
+function geminiKey(){
+  const input=document.getElementById("geminiApiKey");
+  const typed=(input?.value||"").trim();
+  if(typed){sessionStorage.setItem("geminiApiKey",typed);return typed;}
+  return sessionStorage.getItem("geminiApiKey")||"";
+}
+function initGeminiKeyUI(){
+  const input=document.getElementById("geminiApiKey");
+  const stored=sessionStorage.getItem("geminiApiKey")||"";
+  if(input&&stored) input.value=stored;
+  document.getElementById("clearGeminiKey")?.addEventListener("click",()=>{
+    sessionStorage.removeItem("geminiApiKey");
+    if(input) input.value="";
+    const s=document.getElementById("geminiStatus"); if(s)s.textContent="Gemini key cleared from this browser session.";
+  });
+}
+async function useGeminiToPick(){
+  const key=geminiKey();
+  const status=document.getElementById("geminiStatus");
+  const button=document.getElementById("geminiPick");
+  if(!key){
+    if(status)status.textContent="Paste your Gemini API key first.";
+    return;
+  }
+  const level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
+  const style=document.getElementById("style")?.value||"balanced";
+  const mode=document.getElementById("mode")?.value||"Any mode";
+  const own=owned();
+  const missing=JSON.parse(localStorage.getItem("loadoutMissingGuns")||"[]");
+  const categories=["Primary","Backup","Melee","Special","Sniper","Heavy"];
+  const candidatePools={};
+  for(const cat of categories){
+    candidatePools[cat]=[...new Set((db[cat]||[]).filter(name=>own.includes(name)&&!missing.includes(name)))];
+  }
+  const empty=categories.filter(cat=>candidatePools[cat].length===0);
+  if(empty.length){
+    if(status)status.textContent="Gemini cannot build the full loadout because these categories have no eligible guns: "+empty.join(", ");
+    return;
+  }
+  if(button)button.disabled=true;
+  if(status)status.textContent="Gemini is comparing the available guns...";
+  const prompt=[
+    "You are the weapon-selection engine for a Pixel Gun 3D loadout recommender.",
+    "Choose exactly ONE gun for each category: Primary, Backup, Melee, Special, Sniper, Heavy.",
+    "You MUST choose only names that appear in the supplied candidate pools. Never invent a weapon name.",
+    "Optimize for the player's level, mode, and playstyle. Prefer a coherent loadout with complementary ranges, utility, mobility, burst, area control, and reliable damage.",
+    "Avoid duplicate weapon names across categories.",
+    "Return ONLY valid JSON with exactly these six string fields: Primary, Backup, Melee, Special, Sniper, Heavy.",
+    "Player level: "+level,
+    "Playstyle: "+style,
+    "Mode: "+mode,
+    "Candidate pools:",
+    JSON.stringify(candidatePools)
+  ].join("\n");
+  try{
+    const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+GEMINI_MODEL+":generateContent?key="+encodeURIComponent(key),{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        contents:[{role:"user",parts:[{text:prompt}]}],
+        generationConfig:{responseMimeType:"application/json",maxOutputTokens:700}
+      })
+    });
+    const data=await response.json();
+    if(!response.ok){
+      throw new Error(data?.error?.message||("Gemini request failed ("+response.status+")"));
+    }
+    const text=data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
+    if(!text)throw new Error("Gemini returned an empty response.");
+    const parsed=JSON.parse(text);
+    const chosen={};
+    for(const cat of categories){
+      const name=String(parsed?.[cat]||"").trim();
+      if(!candidatePools[cat].includes(name))throw new Error("Gemini returned an invalid "+cat+" choice: "+name);
+      chosen[cat]=name;
+    }
+    const distinct=new Set(Object.values(chosen));
+    if(distinct.size!==categories.length)throw new Error("Gemini returned duplicate guns; try again.");
+    const cards=[...document.querySelectorAll(".slot")];
+    cards.forEach(card=>{
+      const kind=card.querySelector(".kind")?.textContent?.trim();
+      if(!chosen[kind])return;
+      const title=card.querySelector("h3");
+      if(title)title.textContent=chosen[kind];
+      const desc=card.querySelector("p");
+      if(desc)desc.textContent="Selected by Gemini from your eligible weapon pool.";
+    });
+    document.getElementById("status").textContent="GEMINI PICKED";
+    if(status)status.textContent="Gemini selected the six guns above from your allowed pool.";
+  }catch(err){
+    console.error("Gemini picker failed:",err);
+    if(status)status.textContent="Gemini error: "+String(err.message||err);
+  }finally{
+    if(button)button.disabled=false;
+  }
+}
+document.getElementById("geminiPick")?.addEventListener("click",useGeminiToPick);
+initGeminiKeyUI();
 window.rateBuild=function(value){
  const cards=document.querySelectorAll(".slot h3");
  const f=JSON.parse(localStorage.getItem("loadoutFeedback")||"{}");
