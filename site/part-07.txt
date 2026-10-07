@@ -42,6 +42,29 @@ const pets=[
   "Exo Pilot Armor":"Event/Mythical/Legacy","Glitch Hunter Armor":"Event/Mythical/Legacy","Inflatable Armor":"Event/Mythical/Legacy",
   "Cyber Santa Armor":"Event/Mythical/Legacy","Halloween Armor":"Event/Mythical/Legacy","Pilgrim Armor":"Event/Mythical/Legacy",
   "Dragon Armor":"Event/Mythical/Legacy","Wonder Vest":"Event/Mythical/Legacy"
+},
+gadgets=[
+  // Mechs
+  "Battle Mech","Rocket Mech","Robot Samurai",
+  // Defensive barriers & shields
+  "Armor Generator","Barrier","Energy Shield","Turtle Shell",
+  // Healing & support stations
+  "Medkit","Medical Station","Pet Booster","Leader's Drum",
+  // Automated turrets & sentries
+  "Turret","Sticky Turret","Christmas Tree Turret",
+  // Utility & tactical enhancements
+  "Jetpack","Stealth Bracelet","Time Machine","X-Ray Glasses","Super Magnet","Denied!",
+  // Autonomous helpers & status hazards
+  "Blizzard Generator","Clockwork Nutcracker","Demon Stone","Disabler","Fire Mushroom","Firecrackers",
+  "Guardian","Pandora's Box","Royal Guardian","Voodoo Snowman"
+], gadgetCategory={
+  "Battle Mech":"Mech","Rocket Mech":"Mech","Robot Samurai":"Mech",
+  "Armor Generator":"Defensive","Barrier":"Defensive","Energy Shield":"Defensive","Turtle Shell":"Defensive",
+  "Medkit":"Healing","Medical Station":"Healing","Pet Booster":"Healing","Leader's Drum":"Healing",
+  "Turret":"Turret","Sticky Turret":"Turret","Christmas Tree Turret":"Turret",
+  "Jetpack":"Utility","Stealth Bracelet":"Utility","Time Machine":"Utility","X-Ray Glasses":"Utility","Super Magnet":"Utility","Denied!":"Utility",
+  "Blizzard Generator":"Hazard","Clockwork Nutcracker":"Hazard","Demon Stone":"Hazard","Disabler":"Hazard","Fire Mushroom":"Hazard","Firecrackers":"Hazard",
+  "Guardian":"Hazard","Pandora's Box":"Hazard","Royal Guardian":"Hazard","Voodoo Snowman":"Hazard"
 };
 const inv=document.getElementById("inventory");
 let databaseLoaded=false;
