@@ -16,9 +16,6 @@
   hybrid_teamrush:{Primary:6,Backup:5,Melee:7,Special:12,Sniper:3,Heavy:8},hybrid_allrounder:{Primary:7,Backup:6,Melee:6,Special:7,Sniper:7,Heavy:7}
  }[style]||{Primary:2,Backup:2,Melee:2,Special:2,Sniper:2,Heavy:2};
  const includeEvents=document.getElementById("includeEvents")?.checked===true;
- // Build the recommendation database from every category so newly added Wiki
- // weapons are automatically eligible for scoring without adding them to a
- // hand-written preference table.
  const level=Math.max(1,Math.min(65,Number(document.getElementById("level")?.value)||1));
  const levelEligible=x=>{const meta=weaponUnlockData[x]; return !meta || !Number.isInteger(meta.unlockLevel) || meta.unlockLevel<=level;};
  // Every Wiki weapon gets a safe baseline role tag from its real weapon category.
@@ -43,19 +40,14 @@
  // Ownership model: normal Armory weapons are automatically owned. Only
  // event/special-route weapons require an explicit checkbox in the inventory list.
  // Missing-gun exclusions still apply to every weapon.
- // IMPORTANT: this is the actual recommendation pool, not the lower inventory
- // display. Every weapon in the database is scored here. A weapon can only be
- // recommended when it is level-eligible and owned; event/special-route weapons
- // additionally require the event toggle and an ownership checkbox.
- const recommendationPool=[...new Set(
-   Array.isArray(db[cat])?db[cat]:[]
- )];
- const available=recommendationPool.filter(x=>levelEligible(x)&&!missing.includes(x));
- const ownedSet=new Set(own);
+ const available=db[cat].filter(x=>levelEligible(x)&&!missing.includes(x));
  const candidates=available.filter(x=>{
    const meta=weaponUnlockData[x];
-   if(eventWeapons.has(x)) return includeEvents && ownedSet.has(x);
-   return ownedSet.has(x);
+   // Weapons without a verified unlock level are always eligible for recommendations.
+   // This keeps them in the build pool even when their acquisition route is uncertain.
+   if(!meta || !Number.isInteger(meta.unlockLevel)) return true;
+   if(eventWeapons.has(x)) return includeEvents && own.includes(x);
+   return true;
  });
  if(!candidates.length){
    return eventWeapons.has(db[cat][0]) && includeEvents
