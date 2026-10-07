@@ -84,6 +84,7 @@ async function loadFullWeaponDatabase(){
     setStatus("Wiki level/stat sync failed; built-in data remains available. Refresh to retry.");
   }
   if(typeof window.renderInventory==="function")window.renderInventory();else renderInventory();
+  if(typeof window.initTypedGunPicker==="function") window.initTypedGunPicker();
 }
 
 function renderInventory(){
