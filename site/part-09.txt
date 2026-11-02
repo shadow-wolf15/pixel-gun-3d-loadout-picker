@@ -25,7 +25,10 @@ style==="overpowered"?"This setup prioritizes the strongest options in the demo 
  </div>`;
  if(window.renderMissingGunList) window.renderMissingGunList();
 }
-const GEMINI_MODEL="gemini-3.1-pro-preview";
+const GEMINI_MODELS=[
+  {id:"gemini-4-argon",label:"Gemini 4 Argon",thinkingLevel:"high"},
+  {id:"gemini-3.8-flash",label:"Gemini 3.8 Flash",thinkingLevel:null}
+];
 function geminiKey(){
   const input=document.getElementById("geminiApiKey");
   const typed=(input?.value||"").trim();
@@ -39,8 +42,47 @@ function initGeminiKeyUI(){
   document.getElementById("clearGeminiKey")?.addEventListener("click",()=>{
     sessionStorage.removeItem("geminiApiKey");
     if(input) input.value="";
-    const s=document.getElementById("geminiStatus"); if(s)s.textContent="Gemini key cleared from this browser session.";
+    const s=document.getElementById("geminiStatus");
+    if(s)s.textContent="Gemini key cleared from this browser session.";
   });
+}
+function geminiWeaponProfile(category,name){
+  const stats=window.weaponStats?.[name]||{};
+  const attrs=String(stats.attrs||"").replace(/\\s+/g," ").trim().slice(0,150);
+  const text=(name+" "+attrs).toLowerCase();
+  const roles=[];
+  const categoryRoles={
+    Primary:"main sustained-damage weapon",
+    Backup:"fast-switch backup and close-fight coverage",
+    Melee:"close-range damage and movement utility",
+    Special:"utility, control, defense, or support",
+    Sniper:"long-range precision and burst damage",
+    Heavy:"area damage, explosive pressure, or heavy burst"
+  };
+  if(/automatic|minigun|stream beam|rapid fire/.test(text))roles.push("sustained or rapid fire");
+  if(/shotgun|flamethrower|melee|chainsaw/.test(text))roles.push("close range");
+  if(/sniper|crossbow|railgun|marksman|scope|long range/.test(text))roles.push("long range");
+  if(/rocket|grenade|bomb|mortar|launcher|area damage|splash|cannon/.test(text))roles.push("area or splash pressure");
+  if(/poison|burn|freeze|slow|stun|blind|pull|gravity|disabl/.test(text))roles.push("status or crowd control");
+  if(/heal|healing|shield|barrier|support|buff|ammo restore/.test(text))roles.push("support or defense");
+  if(/dash|teleport|mobility|double jump|jet/.test(text))roles.push("mobility");
+  if(/silent|stealth|ghost/.test(text))roles.push("stealth");
+  if(name==="Crystal Laser Cannon")roles.push("primary automatic; fast sustained fire; medium range; high mobility; magazine empties quickly");
+  const numeric={};
+  ["damage","fireRate","capacity","mobility"].forEach(key=>{
+    const value=Number(stats[key]);
+    if(Number.isFinite(value)&&value>0)numeric[key]=value;
+  });
+  return {category,role:categoryRoles[category]||category,traits:roles,stats:numeric,attributes:attrs||undefined};
+}
+function geminiResponseText(data){
+  const steps=Array.isArray(data?.steps)?data.steps:[];
+  return steps
+    .filter(step=>step?.type==="model_output")
+    .flatMap(step=>Array.isArray(step.content)?step.content:[])
+    .filter(part=>part?.type==="text"&&typeof part.text==="string")
+    .map(part=>part.text)
+    .join("\\n").trim();
 }
 async function useGeminiToPick(){
   const key=geminiKey();
@@ -57,53 +99,110 @@ async function useGeminiToPick(){
   const missing=JSON.parse(localStorage.getItem("loadoutMissingGuns")||"[]");
   const categories=["Primary","Backup","Melee","Special","Sniper","Heavy"];
   const candidatePools={};
+  const weaponProfiles={};
   for(const cat of categories){
     candidatePools[cat]=[...new Set((db[cat]||[]).filter(name=>own.includes(name)&&!missing.includes(name)))];
+    weaponProfiles[cat]=candidatePools[cat]
+      .map(name=>geminiWeaponProfile(cat,name))
+      .filter(profile=>profile.traits.length||Object.keys(profile.stats).length||profile.attributes);
   }
   const empty=categories.filter(cat=>candidatePools[cat].length===0);
   if(empty.length){
-    if(status)status.textContent="Gemini cannot build the full loadout because these categories have no eligible guns: "+empty.join(", ");
+    if(status)status.textContent="Gemini needs at least one eligible gun in each category. Empty categories: "+empty.join(", ");
     return;
   }
   if(button)button.disabled=true;
-  if(status)status.textContent="Gemini is comparing the available guns...";
+  if(status)status.textContent="Gemini 4 Argon is analyzing roles, stats, and loadout synergy...";
   const prompt=[
-    "You are the weapon-selection engine for a Pixel Gun 3D loadout recommender.",
-    "Choose exactly ONE gun for each category: Primary, Backup, Melee, Special, Sniper, Heavy.",
-    "You MUST choose only names that appear in the supplied candidate pools. Never invent a weapon name.",
-    "Optimize for the player's level, mode, and playstyle. Prefer a coherent loadout with complementary ranges, utility, mobility, burst, area control, and reliable damage.",
-    "Avoid duplicate weapon names across categories.",
-    "Return ONLY valid JSON with exactly these six string fields: Primary, Backup, Melee, Special, Sniper, Heavy.",
+    "You are an expert Pixel Gun 3D loadout analyst. Pick the most effective, coherent six-gun loadout for this player's exact situation.",
+    "Return one weapon in each category: Primary, Backup, Melee, Special, Sniper, Heavy.",
+    "HARD RULE: choose only exact weapon names from that category's candidate list. Never invent, rename, or move a weapon between categories.",
+    "Read the category and weapon profile carefully. Do not assume a weapon is good just because it has a high fire rate, a laser/cannon name, high rarity, or high raw stats.",
+    "Score overall role fit first, then mode fit, player style, useful attributes, stats, reload/ammo sustainability, and synergy with the other five choices.",
+    "Primary should provide the main damage plan. Backup should cover a weakness such as low ammo, reload downtime, or close pressure. Melee should add useful movement or close-range finishing. Special should provide control, defense, or utility. Sniper should add real long-range capability when the style/mode needs it. Heavy should add burst or area pressure without making the whole loadout redundant.",
+    "A fast-firing automatic is not automatically the best primary: check its actual range, damage, magazine capacity, reload downtime, accuracy, and whether the selected playstyle wants sustained fire. Crystal Laser Cannon is a medium-range automatic with a fast fire rate and high mobility; it can be suitable for a spam/medium-range build but should not be selected as a universal best weapon.",
+    "For Battle Royale, prioritize useful range, reliable damage, and ammo sustainability. For Point Capture, prioritize control and area denial. For Team Fight, include useful team support/control. For Deathmatch, prioritize reliable dueling, mobility, and kill pressure.",
+    "Do not pick six weapons that all perform the same job. Build complementary coverage, avoid duplicate names, and do not favor rarity over performance.",
+    "Use only supplied stat/attribute data. If a stat is missing, treat it as unknown rather than making up a value. Prefer a strong fit over a popular name.",
+    "For each choice, give a short practical reason that explains why it fits this player's style and mode.",
     "Player level: "+level,
     "Playstyle: "+style,
-    "Mode: "+mode,
-    "Candidate pools:",
-    JSON.stringify(candidatePools)
-  ].join("\n");
+    "Game mode: "+mode,
+    "Typed-guns-only mode: "+(localStorage.getItem("typedOnlyMode")==="on"?"ON (the listed candidates are explicitly typed guns)":"OFF (the listed candidates are all eligible weapons)"),
+    "Excluded missing guns: "+JSON.stringify(missing),
+    "Candidate weapon names by category: "+JSON.stringify(candidatePools),
+    "Available weapon details (may be partial): "+JSON.stringify(weaponProfiles)
+  ].join("\\n");
+  const choiceSchema={
+    type:"object",
+    properties:{
+      weapon:{type:"string",description:"Exact weapon name copied from the candidate list for this category."},
+      reason:{type:"string",description:"One short reason this weapon fits the chosen playstyle and mode."}
+    },
+    required:["weapon","reason"],
+    additionalProperties:false
+  };
+  const schema={
+    type:"object",
+    properties:{
+      Primary:choiceSchema,Backup:choiceSchema,Melee:choiceSchema,
+      Special:choiceSchema,Sniper:choiceSchema,Heavy:choiceSchema,
+      summary:{type:"string",description:"One concise explanation of how the six weapons complement each other."}
+    },
+    required:["Primary","Backup","Melee","Special","Sniper","Heavy","summary"],
+    additionalProperties:false
+  };
   try{
-    const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+GEMINI_MODEL+":generateContent?key="+encodeURIComponent(key),{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        contents:[{role:"user",parts:[{text:prompt}]}],
-        generationConfig:{responseMimeType:"application/json",maxOutputTokens:700}
-      })
-    });
-    const data=await response.json();
-    if(!response.ok){
-      throw new Error(data?.error?.message||("Gemini request failed ("+response.status+")"));
+    let parsed=null,usedModel="",lastError=null;
+    for(const model of GEMINI_MODELS){
+      if(status)status.textContent="Thinking with "+model.label+"...";
+      const body={
+        model:model.id,
+        input:prompt,
+        store:false,
+        response_format:{type:"text",mime_type:"application/json",schema},
+        generation_config:{
+          max_output_tokens:2400,
+          ...(model.thinkingLevel?{thinking_level:model.thinkingLevel}:{})
+        }
+      };
+      let response,data;
+      try{
+        response=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{
+          method:"POST",
+          headers:{"Content-Type":"application/json","x-goog-api-key":key},
+          body:JSON.stringify(body)
+        });
+        data=await response.json();
+      }catch(networkError){
+        throw new Error("Could not connect to Google's Gemini API: "+String(networkError.message||networkError));
+      }
+      if(!response.ok){
+        const message=data?.error?.message||("Gemini request failed ("+response.status+")");
+        const mayFallback=model.id==="gemini-4-argon" &&
+          (response.status===400||response.status===403||response.status===404||response.status===429) &&
+          /model|access|available|billing|paid|quota|tier|permission|not found|not supported/i.test(message);
+        if(mayFallback){lastError=new Error(message);continue;}
+        throw new Error(message);
+      }
+      if(data?.status&&data.status!=="completed")throw new Error("Gemini returned status: "+data.status);
+      const raw=geminiResponseText(data);
+      if(!raw)throw new Error("Gemini returned no text output.");
+      try{parsed=JSON.parse(raw);}
+      catch(parseError){throw new Error("Gemini's answer was not valid JSON. Please try again.");}
+      usedModel=model.label;
+      break;
     }
-    const text=data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
-    if(!text)throw new Error("Gemini returned an empty response.");
-    const parsed=JSON.parse(text);
-    const chosen={};
+    if(!parsed)throw lastError||new Error("No Gemini model could complete the request.");
+    const chosen={},reasons={};
     for(const cat of categories){
-      const name=String(parsed?.[cat]||"").trim();
-      if(!candidatePools[cat].includes(name))throw new Error("Gemini returned an invalid "+cat+" choice: "+name);
+      const result=parsed?.[cat];
+      const name=String(result?.weapon||"").trim();
+      if(!candidatePools[cat].includes(name))throw new Error("Gemini returned a weapon outside your eligible "+cat+" list: "+name);
       chosen[cat]=name;
+      reasons[cat]=String(result?.reason||"Selected from your eligible pool.").trim();
     }
-    const distinct=new Set(Object.values(chosen));
-    if(distinct.size!==categories.length)throw new Error("Gemini returned duplicate guns; try again.");
+    if(new Set(Object.values(chosen)).size!==categories.length)throw new Error("Gemini returned duplicate guns; run the picker again.");
     const cards=[...document.querySelectorAll(".slot")];
     cards.forEach(card=>{
       const kind=card.querySelector(".kind")?.textContent?.trim();
@@ -111,10 +210,13 @@ async function useGeminiToPick(){
       const title=card.querySelector("h3");
       if(title)title.textContent=chosen[kind];
       const desc=card.querySelector("p");
-      if(desc)desc.textContent="Selected by Gemini from your eligible weapon pool.";
+      if(desc)desc.textContent=reasons[kind]||"Selected by Gemini.";
     });
-    document.getElementById("status").textContent="GEMINI PICKED";
-    if(status)status.textContent="Gemini selected the six guns above from your allowed pool.";
+    const explanation=document.querySelector(".Loadout.Builder p");
+    if(explanation&&parsed.summary)explanation.textContent=String(parsed.summary);
+    const mainStatus=document.getElementById("status");
+    if(mainStatus)mainStatus.textContent="GEMINI PICKED";
+    if(status)status.textContent=usedModel+" selected six compatible guns and verified every choice against your allowed list.";
   }catch(err){
     console.error("Gemini picker failed:",err);
     if(status)status.textContent="Gemini error: "+String(err.message||err);
