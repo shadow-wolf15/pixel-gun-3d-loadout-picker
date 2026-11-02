@@ -48,7 +48,7 @@ function initGeminiKeyUI(){
 }
 function geminiWeaponProfile(category,name){
   const stats=window.weaponStats?.[name]||{};
-  const attrs=String(stats.attrs||"").replace(/\\s+/g," ").trim().slice(0,150);
+  const attrs=String(stats.attrs||"").replace(/\s+/g," ").trim().slice(0,150);
   const text=(name+" "+attrs).toLowerCase();
   const roles=[];
   const categoryRoles={
@@ -82,7 +82,7 @@ function geminiResponseText(data){
     .flatMap(step=>Array.isArray(step.content)?step.content:[])
     .filter(part=>part?.type==="text"&&typeof part.text==="string")
     .map(part=>part.text)
-    .join("\\n").trim();
+    .join("\n").trim();
 }
 async function useGeminiToPick(){
   const key=geminiKey();
