@@ -24,7 +24,7 @@
  const inferTags=(category,n)=>{
    // Crystal Laser Cannon is a fast-firing, steady mid-range automatic primary.
    // It is not a burst, sniper, area-control, or close-range specialist.
-   if(n==="Crystal Laser Cannon") return ["mid","reliable","spam"];
+   if(n==="Crystal Laser Cannon") return ["mid","spam"];
    const s=n.toLowerCase(), t=new Set(baseTags[category]||["mid"]);
    if(/sniper|rifle|bow|crossbow|railgun|one shot|investigator|marksman|hunter/.test(s)) t.add("long");
    if(/pistol|revolver|shotgun|smg|uzi|dual|machine gun|minigun/.test(s)) t.add(category==="Sniper"?"long":"short");
@@ -75,7 +75,7 @@
      const tacticNameBoost=(style==="sniper"&&/sniper|rifle|railgun|bow|marksman|hunter/i.test(n)?4:0)+(style==="spammer"&&/automatic|rapid|machine|minigun|gatling|cycler|laser|plasma/i.test(n)?4:0)+(style==="stealth"&&/stealth|silent|shadow|poison|ninja|ambush/i.test(n)?4:0)+(style==="pusher"&&/launcher|rocket|howitzer|cannon|splash|portal|pulling/i.test(n)?4:0)+(style==="area"&&/rocket|grenade|bomb|mortar|launcher|splash|howitzer|cannon|area/i.test(n)?4:0)+(style==="mobility"&&/sword|saber|blade|claw|dash|portal|jet|hook|speed/i.test(n)?4:0);
      const roleMismatchPenalty=t.some(tag=>want.includes(tag))?0:-5;
      const namedWeaponAdjustment=n==="Crystal Laser Cannon"
-       ? (["spammer","hybrid_spam"].includes(style)?-1.5:-5)
+       ? (["spammer","hybrid_spam"].includes(style)?-1: (["balanced","casual","hybrid_assault"].includes(style)?-3:-7))
        : 0;
      const missingPenalty=missing.includes(n)?-1000:0;
      const levelBonus=(()=>{const m=weaponUnlockData[n]; if(!m||!Number.isInteger(m.unlockLevel)) return 0; return Math.max(0,2-Math.abs(level-m.unlockLevel)/15);})();
