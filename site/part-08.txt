@@ -34,7 +34,7 @@
    if(/pistol|revolver|shotgun|smg|uzi|dual|machine gun|minigun/.test(s)){
      t.add(category==="Sniper"?"long":"short");
    }
-   if(/rocket|grenade|bomb|mortar|launcher|explosion|howitzer|cannon|artillery|splash|area/.test(s)) t.add("area");
+   if(/rocket|grenade|bomb|mortar|launcher|explosion|howitzer|artillery|splash|area damage|bazooka|missile/.test(s)) t.add("area");
    if(/laser|plasma|automatic|rapid|machine|minigun|spammer|cycl(er|ing)|gatling/.test(s)) t.add("spam");
    if(/sword|saber|blade|claw|knife|axe|hammer|gauntlet|fist|melee|chainsaw|whip|spear/.test(s)){
      t.add("short");t.add("mobility");
@@ -104,7 +104,7 @@
      }[cat]||[];
      const categoryMatches=t.filter(tag=>categoryRoles.includes(tag)).length;
      const categoryFit=categoryMatches*1.7-(categoryMatches===0?5:0);
-     const tacticNameBoost=(style==="sniper"&&/sniper|rifle|railgun|bow|marksman|hunter/i.test(n)?3:0)+(style==="spammer"&&/automatic|rapid|machine|minigun|gatling|cycler|laser|plasma/i.test(n)?3:0)+(style==="stealth"&&/stealth|silent|shadow|poison|ninja|ambush/i.test(n)?3:0)+(style==="pusher"&&/launcher|rocket|howitzer|cannon|splash|portal|pulling/i.test(n)?3:0)+(style==="area"&&/rocket|grenade|bomb|mortar|launcher|splash|howitzer|cannon|area/i.test(n)?3:0)+(style==="mobility"&&/sword|saber|blade|claw|dash|portal|jet|hook|speed/i.test(n)?3:0);
+     const tacticNameBoost=(style==="sniper"&&/sniper|rifle|railgun|bow|marksman|hunter/i.test(n)?3:0)+(style==="spammer"&&/automatic|rapid|machine|minigun|gatling|cycler|laser|plasma/i.test(n)?3:0)+(style==="stealth"&&/stealth|silent|shadow|poison|ninja|ambush/i.test(n)?3:0)+(style==="pusher"&&/launcher|rocket|howitzer|splash|portal|pulling/i.test(n)?3:0)+(style==="area"&&/rocket|grenade|bomb|mortar|launcher|splash|howitzer|area/i.test(n)?3:0)+(style==="mobility"&&/sword|saber|blade|claw|dash|portal|jet|hook|speed/i.test(n)?3:0);
      const coreTags=want.slice(0,2);
      const coreMatches=t.filter(tag=>coreTags.includes(tag)).length;
      const roleMismatchPenalty=coreMatches===0?-8:coreMatches===1?-2:0;
