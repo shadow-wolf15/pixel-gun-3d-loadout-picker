@@ -32,7 +32,7 @@
 <button class="primary" id="build">⚡ Build my loadout</button>
 <div class="gemini-panel" style="margin:10px 0 12px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px">
   <label class="title">Gemini Gun Picker</label>
-  <div class="sub" style="margin-bottom:8px">Use Gemini to choose the best guns from the exact weapon pool available to this build. Gemini 1.5 Pro is retired by Google, so this uses the current Gemini 3.1 Pro Preview model.</div>
+  <div class="sub" style="margin-bottom:8px">Use Gemini 4 Argon with deeper reasoning to compare weapon roles, stats, playstyle fit, and loadout synergy. If your API key cannot access Argon, the site tries Gemini 3.8 Flash. Argon may require paid API access.</div>
   <input id="geminiApiKey" type="password" autocomplete="off" placeholder="Paste your Gemini API key" style="width:100%;box-sizing:border-box;margin-bottom:8px">
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button type="button" id="geminiPick" class="secondary">✨ Use Gemini to Pick Guns</button>
