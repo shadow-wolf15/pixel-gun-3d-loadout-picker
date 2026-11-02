@@ -62,7 +62,7 @@ function geminiWeaponProfile(category,name){
   if(/automatic|minigun|stream beam|rapid fire/.test(text))roles.push("sustained or rapid fire");
   if(/shotgun|flamethrower|melee|chainsaw/.test(text))roles.push("close range");
   if(/sniper|crossbow|railgun|marksman|scope|long range/.test(text))roles.push("long range");
-  if(/rocket|grenade|bomb|mortar|launcher|area damage|splash|cannon/.test(text))roles.push("area or splash pressure");
+  if(/rocket|grenade|bomb|mortar|launcher|area damage|splash|bazooka|missile/.test(text))roles.push("area or splash pressure");
   if(/poison|burn|freeze|slow|stun|blind|pull|gravity|disabl/.test(text))roles.push("status or crowd control");
   if(/heal|healing|shield|barrier|support|buff|ammo restore/.test(text))roles.push("support or defense");
   if(/dash|teleport|mobility|double jump|jet/.test(text))roles.push("mobility");
