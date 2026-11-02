@@ -22,21 +22,42 @@
  // Specific hand-tuned tags below still override/augment these when available.
  const baseTags={Primary:["mid","reliable"],Backup:["short","burst"],Melee:["short","mobility"],Special:["control","utility"],Sniper:["long","burst"],Heavy:["area","burst"]};
  const inferTags=(category,n)=>{
-   // Crystal Laser Cannon is a fast-firing, steady mid-range automatic primary.
-   // It is not a burst, sniper, area-control, or close-range specialist.
-   if(n==="Crystal Laser Cannon") return ["mid","spam"];
    const s=n.toLowerCase(), t=new Set(baseTags[category]||["mid"]);
-   if(/sniper|rifle|bow|crossbow|railgun|one shot|investigator|marksman|hunter/.test(s)) t.add("long");
-   if(/pistol|revolver|shotgun|smg|uzi|dual|machine gun|minigun/.test(s)) t.add(category==="Sniper"?"long":"short");
+   const stats=window.weaponStats?.[n]||{};
+   const attrs=String(stats.attrs||"").toLowerCase();
+   // Crystal Laser Cannon is a primary automatic for sustained mid-range
+   // pressure: high fire rate and mobility, but not a sniper or splash weapon.
+   if(n==="Crystal Laser Cannon") return ["mid","spam","mobility"];
+   if(/sniper|rifle|bow|crossbow|railgun|one shot|investigator|marksman|hunter|long range/.test(s)){
+     t.add("long"); if(category==="Primary")t.delete("mid");
+   }
+   if(/pistol|revolver|shotgun|smg|uzi|dual|machine gun|minigun/.test(s)){
+     t.add(category==="Sniper"?"long":"short");
+   }
    if(/rocket|grenade|bomb|mortar|launcher|explosion|howitzer|cannon|artillery|splash|area/.test(s)) t.add("area");
    if(/laser|plasma|automatic|rapid|machine|minigun|spammer|cycl(er|ing)|gatling/.test(s)) t.add("spam");
-   if(/sword|saber|blade|claw|knife|axe|hammer|gauntlet|fist|melee|chainsaw|whip|spear/.test(s)) {t.add("short");t.add("mobility");}
+   if(/sword|saber|blade|claw|knife|axe|hammer|gauntlet|fist|melee|chainsaw|whip|spear/.test(s)){
+     t.add("short");t.add("mobility");
+   }
    if(/portal|teleport|dash|jet|speed|mobility|tenderizer|pulling|hook/.test(s)) t.add("mobility");
    if(/poison|freeze|ice|slow|curse|control|reflect|barrier|trap|mine|disrupt|web|stun/.test(s)) t.add("control");
    if(/healing|support|scanner|shield|defender|guardian|protector|buff/.test(s)) t.add("support");
    if(/stealth|silent|shadow|invisible|ambush|sneak/.test(s)) t.add("stealth");
    if(/tank|armor|exoskeleton|fortress|defense|shield/.test(s)) t.add("tank");
    if(/burst|death|destroy|killer|annihilator|ultimatum|fatal|execution/.test(s)) t.add("burst");
+   // Use weapon-page attributes when the wiki provided them.
+   if(/automatic|minigun|stream beam|electro-thrower/.test(attrs)) t.add("spam");
+   if(/area damage|area of effect|cluster bomb|rockets|plasma rocket|splash/.test(attrs)) t.add("area");
+   if(/shotgun|flamethrower|melee|chainsaw/.test(attrs)) t.add("short");
+   if(/blindness|poison|burning|slows the target|stun|gravitation force|pulling towards target|disable jumps/.test(attrs)) t.add("control");
+   if(/heal|healing|ammo restore|damage boost for allies|restoring teammate/.test(attrs)) t.add("support");
+   if(/barrier|shield|damage reflection|armor bonus|protection against/.test(attrs)) t.add("defense");
+   if(/silent|ghost/.test(attrs)) t.add("stealth");
+   if(/dash|double jump|marathoner|acceleration after killing/.test(attrs)) t.add("mobility");
+   if(/charge shot|single shots|semi-auto|critical damage|multiple shots/.test(attrs)) t.add("burst");
+   if(Number(stats.fireRate)>=85) t.add("spam");
+   if(Number(stats.mobility)>=80) t.add("mobility");
+   if(Number(stats.capacity)>0 && Number(stats.capacity)<=20 && category==="Primary") t.add("burst");
    return [...t];
  };
  for(const [category,weapons] of Object.entries(db)) for(const weapon of weapons) if(!tags[weapon]) tags[weapon]=inferTags(category,weapon);
@@ -62,33 +83,45 @@
    const sc=n=>{
      const t=tags[n]||[];
      const prefRank=(prefs[cat]||[]).indexOf(n);
-     const preference=prefRank<0?0:(prefs[cat].length-prefRank)*3.5;
-     const role=t.reduce((z,x)=>z+(want.includes(x)?6:0),0);
-     const modeFit=t.reduce((z,x)=>z+(modeWant.includes(x)?4:0),0);
-     const coverage=t.reduce((z,x)=>z+(!alreadyTags.has(x)?3:0),0);
-     // Feedback and stat bonuses are deliberately bounded so a single high
-     // rating value cannot overpower actual style/role fit.
-     const learned=Math.max(-3,Math.min(3,Number(feedback[n])||0))*1.25;
-     const versatility=new Set(t).size*0.8;
-     const categoryFit=(cat==="Sniper"&&t.includes("long")?3:0)+(cat==="Melee"&&t.includes("mobility")?2:0)+(cat==="Heavy"&&t.includes("area")?2:0);
-     const tacticSlot=tacticSlotWeights[cat]||0;
-     const tacticNameBoost=(style==="sniper"&&/sniper|rifle|railgun|bow|marksman|hunter/i.test(n)?4:0)+(style==="spammer"&&/automatic|rapid|machine|minigun|gatling|cycler|laser|plasma/i.test(n)?4:0)+(style==="stealth"&&/stealth|silent|shadow|poison|ninja|ambush/i.test(n)?4:0)+(style==="pusher"&&/launcher|rocket|howitzer|cannon|splash|portal|pulling/i.test(n)?4:0)+(style==="area"&&/rocket|grenade|bomb|mortar|launcher|splash|howitzer|cannon|area/i.test(n)?4:0)+(style==="mobility"&&/sword|saber|blade|claw|dash|portal|jet|hook|speed/i.test(n)?4:0);
-     const roleMismatchPenalty=t.some(tag=>want.includes(tag))?0:-5;
-     const namedWeaponAdjustment=n==="Crystal Laser Cannon"
-       ? (["spammer","hybrid_spam"].includes(style)?-1: (["balanced","casual","hybrid_assault"].includes(style)?-3:-7))
-       : 0;
+     const preference=prefRank<0?0:(prefs[cat].length-prefRank)*2.1;
+     const role= t.reduce((score,tag)=>{
+       const index=want.indexOf(tag);
+       return score+(index<0?0:Math.max(2.5,8-index*1.35));
+     },0);
+     const modeFit=t.reduce((score,tag)=>{
+       const index=modeWant.indexOf(tag);
+       return score+(index<0?0:Math.max(1,4-index*1.1));
+     },0);
+     const coverage=t.reduce((score,tag)=>score+(!alreadyTags.has(tag)?1.35:0),0);
+     const learned=Math.max(-3,Math.min(3,Number(feedback[n])||0))*0.9;
+     const categoryRoles={
+       Primary:["mid","reliable","spam","burst","long","short"],
+       Backup:["short","burst","spam","control","support"],
+       Melee:["short","mobility","stealth"],
+       Special:["control","utility","support","defense","mobility"],
+       Sniper:["long","burst","stealth"],
+       Heavy:["area","burst","tank","control"]
+     }[cat]||[];
+     const categoryMatches=t.filter(tag=>categoryRoles.includes(tag)).length;
+     const categoryFit=categoryMatches*1.7-(categoryMatches===0?5:0);
+     const tacticNameBoost=(style==="sniper"&&/sniper|rifle|railgun|bow|marksman|hunter/i.test(n)?3:0)+(style==="spammer"&&/automatic|rapid|machine|minigun|gatling|cycler|laser|plasma/i.test(n)?3:0)+(style==="stealth"&&/stealth|silent|shadow|poison|ninja|ambush/i.test(n)?3:0)+(style==="pusher"&&/launcher|rocket|howitzer|cannon|splash|portal|pulling/i.test(n)?3:0)+(style==="area"&&/rocket|grenade|bomb|mortar|launcher|splash|howitzer|cannon|area/i.test(n)?3:0)+(style==="mobility"&&/sword|saber|blade|claw|dash|portal|jet|hook|speed/i.test(n)?3:0);
+     const coreTags=want.slice(0,2);
+     const coreMatches=t.filter(tag=>coreTags.includes(tag)).length;
+     const roleMismatchPenalty=coreMatches===0?-8:coreMatches===1?-2:0;
+     const styleConflictPenalty=(want.includes("long")&&t.includes("short")&&!t.includes("long")&&cat!=="Melee"?-3:0)
+       +(want.includes("rush")&&t.includes("long")&&!t.includes("short")&&cat!=="Sniper"?-2:0);
      const missingPenalty=missing.includes(n)?-1000:0;
      const levelBonus=(()=>{const m=weaponUnlockData[n]; if(!m||!Number.isInteger(m.unlockLevel)) return 0; return Math.max(0,2-Math.abs(level-m.unlockLevel)/15);})();
      const diversityPenalty=chosen.includes(n)?-1000:0;
      const stats=window.weaponStats?.[n]||{};
-     const boundedStat=value=>Math.max(0,Math.min(100,Number(value)||0))/100;
-     const fireRate=boundedStat(stats.fireRate), damage=boundedStat(stats.damage), capacity=boundedStat(stats.capacity), mobility=boundedStat(stats.mobility);
-     const statScore=(damage*2)+(fireRate*1.25)+(capacity*0.75)+(mobility*0.75);
-     const statFit=(want.includes("spam")?fireRate*2.25:0)+(want.includes("burst")?damage*2.5:0)+(want.includes("mobility")?mobility*1.5:0)+(want.includes("mid")?capacity*0.7:0);
+     const bounded=(value,scale=100)=>Math.max(0,Math.min(scale,Number(value)||0))/scale;
+     const fireRate=bounded(stats.fireRate), damage=bounded(stats.damage,25), capacity=bounded(stats.capacity), mobility=bounded(stats.mobility);
+     const statScore=(damage*1.5)+(fireRate*0.8)+(capacity*0.45)+(mobility*0.45);
+     const statFit=(want.includes("spam")?fireRate*1.8:0)+(want.includes("burst")?damage*1.8:0)+(want.includes("mobility")?mobility*1.1:0)+(want.includes("mid")?capacity*0.45:0);
      const buildNo=Number(localStorage.getItem("loadoutBuildNumber")||0);
      let hash=0; for(let i=0;i<n.length;i++) hash=((hash*31)+n.charCodeAt(i)+buildNo*17)%997;
-     const variation=(hash%11)/4;
-     return preference+role+modeFit+roleMismatchPenalty+coverage+learned+versatility+categoryFit+tacticSlot+tacticNameBoost+statScore+statFit+namedWeaponAdjustment+levelBonus+missingPenalty+diversityPenalty+variation;
+     const variation=(hash%6)/12;
+     return preference+role+modeFit+coverage+learned+categoryFit+tacticNameBoost+statScore+statFit+roleMismatchPenalty+styleConflictPenalty+levelBonus+missingPenalty+diversityPenalty+variation;
    };
    return sc(b)-sc(a);
  })[0];
